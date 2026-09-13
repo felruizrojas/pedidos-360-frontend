@@ -1,0 +1,63 @@
+<!-- Navbar -->
+<nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16">
+      <!-- Logo / Nombre -->
+      <div class="flex items-center">
+        <a routerLink="/inicio"
+          class="text-xl font-bold text-indigo-600 tracking-tight hover:opacity-90 transition-opacity cursor-pointer">
+          Pedidos 360
+        </a>
+      </div>
+
+      <!-- Menú Escritorio -->
+      <div class="hidden md:flex items-center space-x-8">
+        <a routerLink="/inicio" routerLinkActive="text-indigo-600 font-semibold"
+          class="text-gray-600 hover:text-indigo-600 transition-colors duration-200">Inicio</a>
+        <a routerLink="/catalogo" routerLinkActive="text-indigo-600 font-semibold"
+          class="text-gray-600 hover:text-indigo-600 transition-colors duration-200">Catálogo</a>
+        
+        <!-- CONTROL DE ROL ESCRITORIO -->
+        @if (canAccessDashboard()) {
+          <a routerLink="/dashboard" routerLinkActive="text-indigo-600 font-semibold"
+            class="text-gray-600 hover:text-indigo-600 transition-colors duration-200">Dashboard</a>
+        }
+
+        <a routerLink="/login"
+          class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium shadow-sm">Login</a>
+      </div>
+
+      <!-- Botón Menú Móvil -->
+      <div class="flex items-center md:hidden">
+        <button (click)="toggleMenu()" type="button" class="text-gray-500 hover:text-gray-700 focus:outline-none"
+          aria-label="Toggle menu">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <!-- Nota: Puedes cambiar este *ngIf por @if de Angular si deseas unificar sintaxis -->
+            <path *ngIf="!isMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16" />
+            <path *ngIf="isMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menú Desplegable Móvil -->
+  <!-- Mantenemos tu *ngIf original del menú móvil para evitar romper la animación o el estado actual -->
+  <div *ngIf="isMenuOpen" class="md:hidden bg-white border-b border-gray-100 px-4 pt-2 pb-4 space-y-1">
+    <a routerLink="/inicio" (click)="toggleMenu()"
+      class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600">Inicio</a>
+    <a routerLink="/catalogo" (click)="toggleMenu()"
+      class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600">Catálogo</a>
+    
+    <!-- CONTROL DE ROL MÓVIL -->
+    @if (canAccessDashboard()) {
+      <a routerLink="/dashboard" (click)="toggleMenu()"
+        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600">Dashboard</a>
+    }
+
+    <a routerLink="/login" (click)="toggleMenu()"
+      class="block text-center bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium shadow-sm mt-4">Login</a>
+  </div>
+</nav>

@@ -1,0 +1,58 @@
+<main class="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4">
+  <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-8 space-y-8 transition-all duration-300 hover:shadow-2xl">
+    
+    <!-- Encabezado / Logo -->
+    <div class="text-center space-y-2">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-indigo-50 text-indigo-600 mb-2">
+        <!-- Icono de Candado / Seguridad -->
+        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 2 0 002-2v-6a2 2 0 002-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h2 class="text-3xl font-extrabold tracking-tight text-gray-950">
+        Portal de Acceso
+      </h2>
+      <p class="text-sm text-gray-500 max-w-xs mx-auto">
+        Inicia sesión de forma segura para gestionar tus órdenes en <span class="font-semibold text-indigo-600">Pedidos 360</span>.
+      </p>
+    </div>
+
+    <!-- Contenedor del Botón de Microsoft -->
+    <div class="space-y-4">
+      <button 
+        (click)="loginWithMicrosoft()"
+        type="button" 
+        class="w-full flex items-center justify-center gap-3 bg-neutral-900 text-white px-5 py-3.5 rounded-xl font-medium shadow-md hover:bg-neutral-800 active:scale-[0.98] transition-all duration-200 group"
+      >
+        <!-- Logo Oficial de Microsoft en SVG -->
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 23 23" fill="none">
+          <path d="M0 0H11V11H0V0Z" fill="#F25022"/>
+          <path d="M12 0H23V11H12V0Z" fill="#7FBA00"/>
+          <path d="M0 12H11V23H0V12Z" fill="#00A4EF"/>
+          <path d="M12 12H23V23H12V12Z" fill="#FFB900"/>
+        </svg>
+        <span class="text-sm tracking-wide">
+          Iniciar sesión con Microsoft
+        </span>
+      </button>
+
+      <!-- Nota aclaratoria sobre el dominio de la empresa -->
+      <div class="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3.5 mt-4">
+        <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-xs text-amber-800 leading-normal">
+          Usa tu correo institucional registrado en el tenant de Azure de la organización.
+        </p>
+      </div>
+    </div>
+
+    <!-- Pie de página informativo -->
+    <div class="text-center">
+      <p class="text-xs text-gray-400">
+        Al continuar, aceptas las políticas de seguridad interna de Pedidos 360.
+      </p>
+    </div>
+
+  </div>
+</main>
