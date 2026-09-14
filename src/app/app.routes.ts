@@ -4,6 +4,8 @@ import { Catalogo } from './pages/catalogo/catalogo';
 import { Dashboard } from './pages/dashboard/dashboard';
 import { Login } from './pages/login/login';
 import { authGuard } from './core/guards/auth-guard';
+// 1. Nueva importación de tu componente puente
+import { AuthRedirect } from './shared/components/auth-redirect/auth-redirect';
 
 export const routes: Routes = [
   // Ruta por defecto que redirige a la bienvenida
@@ -13,13 +15,16 @@ export const routes: Routes = [
   { path: 'inicio', component: Inicio },
   { path: 'catalogo', component: Catalogo },
   { path: 'login', component: Login },
+  
+  // 🔄 2. Nueva ruta pública exclusiva para capturar las respuestas del popup de Azure
+  { path: 'auth-redirect', component: AuthRedirect },
 
   // 🔒 Ruta protegida del Dashboard
   { 
     path: 'dashboard', 
     component: Dashboard,
-    canActivate: [authGuard], // El guard evaluará los roles antes de cargar la vista
-    data: { roles: ['superAdmin', 'admin', 'operador'] } // Roles que tienen permitido el acceso principal
+    canActivate: [authGuard], 
+    data: { roles: ['superAdmin', 'admin', 'operador'] } 
   },
 
   // 🔄 Comodín para redirigir cualquier URL rota o inexistente a inicio

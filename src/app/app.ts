@@ -5,7 +5,7 @@ import { Navbar } from './shared/components/navbar/navbar';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, Navbar],
+  imports: [RouterOutlet, Navbar], // Limpio y 100% Standalone
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
