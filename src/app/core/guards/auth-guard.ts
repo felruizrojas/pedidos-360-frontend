@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
+import { getUserRoles } from '../utils/user-roles';
 
 export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
@@ -22,7 +23,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   }
 
   // 4. Evaluamos si alguno de los roles del usuario (claim del ID token) está permitido
-  const userRoles = (account.idTokenClaims?.['roles'] as Array<string>) ?? [];
+  const userRoles = getUserRoles(account);
   if (userRoles.some((role) => expectedRoles.includes(role))) {
     return true;
   }

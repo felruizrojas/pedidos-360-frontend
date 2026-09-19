@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MsalService } from '@azure/msal-angular';
 import { AccountInfo } from '@azure/msal-browser';
+import { getUserRoles } from '../../core/utils/user-roles';
 import { environment } from '../../../environments/environment.development';
 
 @Component({
@@ -16,7 +17,7 @@ export class Login implements OnInit {
   private isInitialized = false;
 
   readonly account = signal<AccountInfo | null>(null);
-  readonly roles = computed(() => (this.account()?.idTokenClaims?.['roles'] as string[] | undefined) ?? []);
+  readonly roles = computed(() => getUserRoles(this.account()));
 
   constructor(private authService: MsalService) {}
 

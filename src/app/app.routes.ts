@@ -26,7 +26,7 @@ export const routes: Routes = [
     path: 'dashboard', 
     component: Dashboard,
     canActivate: [authGuard], 
-    data: { roles: ['superAdmin', 'admin', 'operador'] } 
+    data: { roles: ['Admin', 'Operador'] } 
   },
 
   // 🔄 Comodín para redirigir cualquier URL rota o inexistente a inicio

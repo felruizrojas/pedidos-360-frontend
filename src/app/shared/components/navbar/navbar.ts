@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
+import { getUserRoles } from '../../../core/utils/user-roles';
 
 @Component({
   selector: 'navbar',
@@ -12,7 +13,7 @@ import { MsalService } from '@azure/msal-angular';
 })
 export class Navbar {
   private readonly msalService = inject(MsalService);
-  private readonly allowedDashboardRoles = ['superAdmin', 'admin', 'operador'];
+  private readonly allowedDashboardRoles = ['Admin', 'Operador'];
 
   isMenuOpen = false;
 
@@ -22,7 +23,7 @@ export class Navbar {
 
   canAccessDashboard(): boolean {
     const account = this.msalService.instance.getActiveAccount();
-    const roles = (account?.idTokenClaims?.['roles'] as Array<string>) ?? [];
+    const roles = getUserRoles(account);
     return roles.some((role) => this.allowedDashboardRoles.includes(role));
   }
 
