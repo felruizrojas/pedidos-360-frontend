@@ -37,16 +37,19 @@ export function msalInterceptorConfigFactory() {
   protectedResourceMap.set('http://localhost:8080/api/*', [
     `api://${environment.apiClientId}/access_as_user`
   ]);
+  protectedResourceMap.set('http://localhost:8081/api/*', [
+    `api://${environment.apiClientId}/access_as_user`
+  ]);
 
   return {
-    interactionType: 'popup', 
+    interactionType: 'redirect',
     protectedResourceMap
   };
 }
 
 export function msalGuardConfigFactory() {
   return {
-    interactionType: 'popup',
+    interactionType: 'redirect',
     authRequest: {
       scopes: [`api://${environment.apiClientId}/access_as_user`]
     }

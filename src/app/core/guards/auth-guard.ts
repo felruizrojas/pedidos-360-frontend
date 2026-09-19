@@ -6,19 +6,19 @@ export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const msalService = inject(MsalService);
 
-  // 1. Obtenemos los roles permitidos directamente desde la configuración de la ruta
-  const expectedRoles = route.data?.['roles'] as Array<string>;
-
-  // 2. Si la ruta no especificó roles requeridos, se considera pública o de libre acceso
-  if (!expectedRoles || expectedRoles.length === 0) {
-    return true;
-  }
-
-  // 3. Sin sesión activa, no hay roles que evaluar
+  // 1. Toda ruta que use este guard exige, como mínimo, sesión activa
   const account = msalService.instance.getActiveAccount();
   if (!account) {
     router.navigate(['/login']);
     return false;
+  }
+
+  // 2. Obtenemos los roles permitidos directamente desde la configuración de la ruta
+  const expectedRoles = route.data?.['roles'] as Array<string>;
+
+  // 3. Si la ruta no especificó roles, basta con estar autenticado (sin restricción de rol)
+  if (!expectedRoles || expectedRoles.length === 0) {
+    return true;
   }
 
   // 4. Evaluamos si alguno de los roles del usuario (claim del ID token) está permitido

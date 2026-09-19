@@ -13,8 +13,10 @@ export const routes: Routes = [
   
   // Rutas públicas accesibles por cualquier usuario
   { path: 'inicio', component: Inicio },
-  { path: 'catalogo', component: Catalogo },
   { path: 'login', component: Login },
+
+  // 🔒 Catálogo: requiere sesión activa (sin restricción de rol específico)
+  { path: 'catalogo', component: Catalogo, canActivate: [authGuard] },
   
   // 🔄 2. Nueva ruta pública exclusiva para capturar las respuestas del popup de Azure
   { path: 'auth-redirect', component: AuthRedirect },
