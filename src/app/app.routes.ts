@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { Inicio } from './pages/inicio/inicio';
 import { Catalogo } from './pages/catalogo/catalogo';
-import { Dashboard } from './pages/dashboard/dashboard';
 import { Login } from './pages/login/login';
 import { authGuard } from './core/guards/auth-guard';
 // 1. Nueva importación de tu componente puente
@@ -24,7 +23,7 @@ export const routes: Routes = [
   // 🔒 Ruta protegida del Dashboard
   { 
     path: 'dashboard', 
-    component: Dashboard,
+    loadChildren: () => import('./admin/admin.routes').then((m) => m.adminRoutes),
     canActivate: [authGuard], 
     data: { roles: ['Admin', 'Operador'] } 
   },

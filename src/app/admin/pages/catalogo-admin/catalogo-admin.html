@@ -1,0 +1,111 @@
+<div class="max-w-6xl space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Catálogo</h1>
+    <button type="button" (click)="alternarForm()" [attr.aria-expanded]="mostrarForm()" aria-controls="form-producto"
+      class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+      {{ mostrarForm() ? 'Cancelar' : 'Añadir producto' }}
+    </button>
+  </div>
+
+  @if (mostrarForm()) {
+    <form id="form-producto" [formGroup]="form" (ngSubmit)="guardar()" novalidate
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 grid gap-4 sm:grid-cols-2">
+      <h2 class="sm:col-span-2 text-lg font-bold text-gray-900">Nuevo producto</h2>
+
+      <div class="sm:col-span-2">
+        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre *</label>
+        <input id="nombre" type="text" formControlName="nombre" maxlength="255" required
+          [attr.aria-invalid]="form.controls.nombre.touched && form.controls.nombre.invalid"
+          aria-describedby="err-nombre"
+          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+        @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+          <p id="err-nombre" role="alert" class="mt-1 text-sm text-red-700">El nombre es obligatorio (máx. 255 caracteres).</p>
+        }
+      </div>
+
+      <div class="sm:col-span-2">
+        <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
+        <textarea id="descripcion" rows="3" formControlName="descripcion"
+          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600"></textarea>
+      </div>
+
+      <div>
+        <label for="precio" class="block text-sm font-medium text-gray-700">Precio *</label>
+        <input id="precio" type="number" step="1" min="1" formControlName="precio" required
+          [attr.aria-invalid]="form.controls.precio.touched && form.controls.precio.invalid"
+          aria-describedby="err-precio"
+          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+        @if (form.controls.precio.touched && form.controls.precio.invalid) {
+          <p id="err-precio" role="alert" class="mt-1 text-sm text-red-700">El precio debe ser un monto entero mayor que 0.</p>
+        }
+      </div>
+
+      <div>
+        <label for="stock" class="block text-sm font-medium text-gray-700">Stock *</label>
+        <input id="stock" type="number" step="1" min="0" formControlName="stock" required
+          [attr.aria-invalid]="form.controls.stock.touched && form.controls.stock.invalid"
+          aria-describedby="err-stock"
+          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+        @if (form.controls.stock.touched && form.controls.stock.invalid) {
+          <p id="err-stock" role="alert" class="mt-1 text-sm text-red-700">El stock debe ser un entero de 0 o más.</p>
+        }
+      </div>
+
+      <div class="sm:col-span-2">
+        <label for="categoria" class="block text-sm font-medium text-gray-700">Categoría</label>
+        <input id="categoria" type="text" formControlName="categoria"
+          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+      </div>
+
+      @if (errorGuardar()) {
+        <p role="alert" class="sm:col-span-2 p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-700">{{ errorGuardar() }}</p>
+      }
+
+      <div class="sm:col-span-2 flex justify-end">
+        <button type="submit" [disabled]="guardando()"
+          class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 disabled:opacity-60 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          {{ guardando() ? 'Guardando…' : 'Guardar producto' }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (cargando()) {
+    <p class="text-gray-600" role="status">Cargando productos…</p>
+  } @else if (errorCarga()) {
+    <div role="alert" class="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 flex items-center justify-between gap-3">
+      <span>{{ errorCarga() }}</span>
+      <button type="button" (click)="cargar()" class="font-semibold underline cursor-pointer">Reintentar</button>
+    </div>
+  } @else if (productos().length === 0) {
+    <p class="text-gray-600">Aún no hay productos en el catálogo.</p>
+  } @else {
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <caption class="sr-only">Productos del catálogo</caption>
+        <thead class="bg-gray-50 text-gray-700">
+          <tr>
+            <th scope="col" class="px-4 py-3 font-semibold">ID</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Nombre</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Descripción</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Categoría</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-right">Precio</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-right">Stock</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 text-gray-800">
+          @for (p of productos(); track p.id) {
+            <tr>
+              <td class="px-4 py-3">{{ p.id }}</td>
+              <td class="px-4 py-3 font-medium">{{ p.nombre }}</td>
+              <td class="px-4 py-3">{{ p.descripcion }}</td>
+              <td class="px-4 py-3">{{ p.categoria }}</td>
+              <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
+              <td class="px-4 py-3 text-right">{{ p.stock }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
