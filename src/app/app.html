@@ -1,5 +1,7 @@
-<!-- La barra de navegación se queda fija arriba -->
-<navbar></navbar>
+<!-- La barra de navegación pública se queda fija arriba, salvo en la administración -->
+@if (!enAdmin()) {
+  <navbar></navbar>
+}
 
 <!-- Aquí adentro Angular inyectará la página actual (Dashboard, Login, etc.) -->
 <router-outlet></router-outlet>

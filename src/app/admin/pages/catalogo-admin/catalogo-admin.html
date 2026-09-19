@@ -51,12 +51,6 @@
         }
       </div>
 
-      <div class="sm:col-span-2">
-        <label for="categoria" class="block text-sm font-medium text-gray-700">Categoría</label>
-        <input id="categoria" type="text" formControlName="categoria"
-          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
-      </div>
-
       @if (errorGuardar()) {
         <p role="alert" class="sm:col-span-2 p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-700">{{ errorGuardar() }}</p>
       }
@@ -88,7 +82,6 @@
             <th scope="col" class="px-4 py-3 font-semibold">ID</th>
             <th scope="col" class="px-4 py-3 font-semibold">Nombre</th>
             <th scope="col" class="px-4 py-3 font-semibold">Descripción</th>
-            <th scope="col" class="px-4 py-3 font-semibold">Categoría</th>
             <th scope="col" class="px-4 py-3 font-semibold text-right">Precio</th>
             <th scope="col" class="px-4 py-3 font-semibold text-right">Stock</th>
           </tr>
@@ -99,7 +92,6 @@
               <td class="px-4 py-3">{{ p.id }}</td>
               <td class="px-4 py-3 font-medium">{{ p.nombre }}</td>
               <td class="px-4 py-3">{{ p.descripcion }}</td>
-              <td class="px-4 py-3">{{ p.categoria }}</td>
               <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
               <td class="px-4 py-3 text-right">{{ p.stock }}</td>
             </tr>

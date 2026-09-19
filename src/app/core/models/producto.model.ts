@@ -4,7 +4,6 @@ export interface Producto {
   descripcion: string;
   precio: number;
   stock: number;
-  categoria: string;
 }
 
 /** Datos que se envían al back para crear un producto (el id lo genera el back). */

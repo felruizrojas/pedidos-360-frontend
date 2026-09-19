@@ -26,7 +26,6 @@ export class CatalogoAdmin implements OnInit {
     descripcion: [''],
     precio: [null as number | null, [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
     stock: [null as number | null, [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)]],
-    categoria: [''],
   });
 
   ngOnInit(): void {
@@ -60,13 +59,12 @@ export class CatalogoAdmin implements OnInit {
       return;
     }
 
-    const { nombre, descripcion, precio, stock, categoria } = this.form.getRawValue();
+    const { nombre, descripcion, precio, stock } = this.form.getRawValue();
     const nuevo: NuevoProducto = {
       nombre: nombre.trim(),
       descripcion: descripcion.trim(),
       precio: precio!,
       stock: stock!,
-      categoria: categoria.trim(),
     };
 
     this.guardando.set(true);
