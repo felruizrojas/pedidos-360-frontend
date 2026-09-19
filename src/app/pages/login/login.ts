@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
+import { AccountInfo } from '@azure/msal-browser';
 import { environment } from '../../../environments/environment.development';
 
 @Component({
@@ -15,10 +15,10 @@ export class Login implements OnInit {
   errorMessage: string = '';
   private isInitialized = false;
 
-  constructor(
-    private authService: MsalService,
-    private router: Router
-  ) {}
+  readonly account = signal<AccountInfo | null>(null);
+  readonly roles = computed(() => (this.account()?.idTokenClaims?.['roles'] as string[] | undefined) ?? []);
+
+  constructor(private authService: MsalService) {}
 
   async ngOnInit(): Promise<void> {
     // Inicialización obligatoria y segura de MSAL v5 para SSR
@@ -40,8 +40,19 @@ export class Login implements OnInit {
     const accounts = this.authService.instance.getAllAccounts();
     if (accounts.length > 0) {
       this.authService.instance.setActiveAccount(accounts[0]);
-      this.router.navigate(['/inicio']); // Si ya estaba logueado, lo saca del login
+      this.account.set(accounts[0]); // Si ya estaba logueado, muestra sus datos en vez de la card de login
     }
+  }
+
+  logout(): void {
+    this.authService.logoutRedirect({
+      account: this.account() ?? undefined
+    }).subscribe({
+      error: (err) => {
+        this.errorMessage = `Error: ${err.message || err}`;
+        console.error(err);
+      }
+    });
   }
 
   loginWithMicrosoft(): void {

@@ -16,15 +16,17 @@
           class="text-gray-600 hover:text-indigo-600 transition-colors duration-200">Inicio</a>
         <a routerLink="/catalogo" routerLinkActive="text-indigo-600 font-semibold"
           class="text-gray-600 hover:text-indigo-600 transition-colors duration-200">Catálogo</a>
-        
+
         <!-- CONTROL DE ROL ESCRITORIO -->
         @if (canAccessDashboard()) {
-          <a routerLink="/dashboard" routerLinkActive="text-indigo-600 font-semibold"
-            class="text-gray-600 hover:text-indigo-600 transition-colors duration-200">Dashboard</a>
+        <a routerLink="/dashboard" routerLinkActive="text-indigo-600 font-semibold"
+          class="text-gray-600 hover:text-indigo-600 transition-colors duration-200">Dashboard</a>
         }
 
         <a routerLink="/login"
-          class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium shadow-sm">Login</a>
+          class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium shadow-sm">
+          @if (userName(); as name) { Hola, {{ name }} } @else { Login }
+        </a>
       </div>
 
       <!-- Botón Menú Móvil -->
@@ -50,14 +52,16 @@
       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600">Inicio</a>
     <a routerLink="/catalogo" (click)="toggleMenu()"
       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600">Catálogo</a>
-    
+
     <!-- CONTROL DE ROL MÓVIL -->
     @if (canAccessDashboard()) {
-      <a routerLink="/dashboard" (click)="toggleMenu()"
-        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600">Dashboard</a>
+    <a routerLink="/dashboard" (click)="toggleMenu()"
+      class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600">Dashboard</a>
     }
 
-    <a routerLink="/login" (click)="toggleMenu()"
-      class="block text-center bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium shadow-sm mt-4">Login</a>
+    <<a routerLink="/login"
+      class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium shadow-sm">
+      @if (userName(); as name) { Hola, {{ name }} } @else { Login }
+      </a>
   </div>
 </nav>

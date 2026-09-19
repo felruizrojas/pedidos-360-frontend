@@ -25,4 +25,9 @@ export class Navbar {
     const roles = (account?.idTokenClaims?.['roles'] as Array<string>) ?? [];
     return roles.some((role) => this.allowedDashboardRoles.includes(role));
   }
+
+  userName(): string | null {
+    const account = this.msalService.instance.getActiveAccount();
+    return account?.name?.split(' ')[0] ?? null; // solo el primer nombre
+  }
 }
