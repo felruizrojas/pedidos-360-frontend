@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MsalService } from '@azure/msal-angular';
 import { AccountInfo } from '@azure/msal-browser';
 import { getUserRoles } from '../../core/utils/user-roles';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',

@@ -1,6 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ApiError, esApiError } from '../../../core/models/api-error.model';
 import { NuevoProducto, Producto } from '../../../core/models/producto.model';
 import { CatalogoService } from '../../../core/services/catalogo';
 
@@ -20,6 +21,8 @@ export class CatalogoAdmin implements OnInit {
   protected readonly mostrarForm = signal(false);
   protected readonly guardando = signal(false);
   protected readonly errorGuardar = signal('');
+  /** Errores de validación 400 del backend por campo. */
+  protected readonly erroresCampo = signal<Record<string, string>>({});
 
   protected readonly form = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(255)]],
@@ -40,9 +43,13 @@ export class CatalogoAdmin implements OnInit {
         this.productos.set(productos);
         this.cargando.set(false);
       },
-      error: (error) => {
-        console.error('Error al obtener los productos:', error);
-        this.errorCarga.set('No se pudieron cargar los productos.');
+      error: (e: unknown) => {
+        const status = esApiError(e) ? e.status : 0;
+        this.errorCarga.set(
+          status === 403
+            ? 'No tienes permisos para ver los productos.'
+            : 'No se pudieron cargar los productos. El servicio podría no estar disponible.',
+        );
         this.cargando.set(false);
       },
     });
@@ -51,6 +58,7 @@ export class CatalogoAdmin implements OnInit {
   protected alternarForm(): void {
     this.mostrarForm.update((abierto) => !abierto);
     this.errorGuardar.set('');
+    this.erroresCampo.set({});
   }
 
   protected guardar(): void {
@@ -69,6 +77,7 @@ export class CatalogoAdmin implements OnInit {
 
     this.guardando.set(true);
     this.errorGuardar.set('');
+    this.erroresCampo.set({});
     this.catalogoService.crearProducto(nuevo).subscribe({
       next: (creado) => {
         this.productos.update((lista) => [...lista, creado]);
@@ -76,10 +85,21 @@ export class CatalogoAdmin implements OnInit {
         this.mostrarForm.set(false);
         this.guardando.set(false);
       },
-      error: (error) => {
-        console.error('Error al crear el producto:', error);
-        this.errorGuardar.set('No se pudo crear el producto. Revisa los datos e inténtalo de nuevo.');
+      error: (e: unknown) => {
+        const apiError: ApiError = esApiError(e) ? e : { status: 0, mensaje: '' };
         this.guardando.set(false);
+        if (apiError.status === 400 && apiError.detalles) {
+          this.erroresCampo.set(apiError.detalles);
+          this.errorGuardar.set('Revisa los campos marcados.');
+        } else if (apiError.status === 403) {
+          this.errorGuardar.set('No tienes permisos para crear productos');
+        } else if (apiError.status === 401) {
+          this.errorGuardar.set('Tu sesión expiró. Vuelve a iniciar sesión.');
+        } else if (apiError.status === 0 || apiError.status >= 500) {
+          this.errorGuardar.set('El servicio no está disponible. Inténtalo de nuevo.');
+        } else {
+          this.errorGuardar.set(apiError.mensaje || 'No se pudo crear el producto.');
+        }
       },
     });
   }

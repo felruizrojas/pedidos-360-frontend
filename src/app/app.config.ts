@@ -4,7 +4,7 @@ import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 // Importaciones de Angular HTTP con withFetch
-import { provideHttpClient, withInterceptorsFromDi, withFetch, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi, withInterceptors, withFetch, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { PublicClientApplication } from '@azure/msal-browser';
 import { 
   MSAL_INSTANCE, 
@@ -15,7 +15,8 @@ import {
   MsalGuard, 
   MsalBroadcastService 
 } from '@azure/msal-angular';
-import { environment } from '../environments/environment.development';
+import { apiErrorInterceptor } from './core/interceptors/api-error.interceptor';
+import { environment } from '../environments/environment';
 
 export function msalInstanceFactory() {
   return new PublicClientApplication({
@@ -23,8 +24,8 @@ export function msalInstanceFactory() {
       clientId: environment.spaClientId.trim(),
       authority: `https://login.microsoftonline.com/${environment.tenantId.trim()}`,
       // Volvemos a la raíz limpia recomendada por las guías oficiales
-      redirectUri: 'http://localhost:4200/auth-redirect',
-      postLogoutRedirectUri: 'http://localhost:4200'
+      redirectUri: environment.redirectUri,
+      postLogoutRedirectUri: environment.postLogoutRedirectUri
     },
     cache: {
       cacheLocation: 'sessionStorage'
@@ -34,10 +35,8 @@ export function msalInstanceFactory() {
 
 export function msalInterceptorConfigFactory() {
   const protectedResourceMap = new Map<string, Array<string>>();
-  protectedResourceMap.set('http://localhost:8080/api/*', [
-    `api://${environment.apiClientId}/access_as_user`
-  ]);
-  protectedResourceMap.set('http://localhost:8081/api/*', [
+  // El front solo habla con el BFF / API Gateway, nunca con los microservicios directamente.
+  protectedResourceMap.set(`${environment.apiBaseUrl}/api/*`, [
     `api://${environment.apiClientId}/access_as_user`
   ]);
 
@@ -63,7 +62,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     
     // CORRECCIÓN: Agregamos withFetch() para eliminar la advertencia NG02801 y estabilizar las llamadas
-    provideHttpClient(withInterceptorsFromDi(), withFetch()), 
+    provideHttpClient(withInterceptorsFromDi(), withInterceptors([apiErrorInterceptor]), withFetch()), 
     
     { provide: HTTP_INTERCEPTORS, useClass: MsalInterceptor, multi: true },
     { provide: MSAL_INSTANCE, useFactory: msalInstanceFactory },
