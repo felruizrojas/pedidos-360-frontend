@@ -1,13 +1,16 @@
 import { CurrencyPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Pagination } from '../../../shared/components/pagination/pagination';
 import { ApiError, esApiError } from '../../../core/models/api-error.model';
 import { NuevoProducto, Producto } from '../../../core/models/producto.model';
 import { CatalogoService } from '../../../core/services/catalogo';
 
+const PRODUCTOS_POR_PAGINA = 15;
+
 @Component({
   selector: 'app-catalogo-admin',
-  imports: [ReactiveFormsModule, CurrencyPipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, Pagination],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './catalogo-admin.html',
 })
@@ -16,6 +19,12 @@ export class CatalogoAdmin implements OnInit {
   private readonly fb = inject(FormBuilder).nonNullable;
 
   protected readonly productos = signal<Producto[]>([]);
+  protected readonly pagina = signal(1);
+  protected readonly tamanoPagina = PRODUCTOS_POR_PAGINA;
+  protected readonly productosPagina = computed(() => {
+    const inicio = (this.pagina() - 1) * PRODUCTOS_POR_PAGINA;
+    return this.productos().slice(inicio, inicio + PRODUCTOS_POR_PAGINA);
+  });
   protected readonly cargando = signal(true);
   protected readonly errorCarga = signal('');
   protected readonly mostrarForm = signal(false);
@@ -41,6 +50,7 @@ export class CatalogoAdmin implements OnInit {
     this.catalogoService.obtenerProductos().subscribe({
       next: (productos) => {
         this.productos.set(productos);
+        this.pagina.set(1);
         this.cargando.set(false);
       },
       error: (e: unknown) => {

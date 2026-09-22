@@ -1,13 +1,16 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Pagination } from '../../shared/components/pagination/pagination';
 import { ApiError, esApiError } from '../../core/models/api-error.model';
 import { Producto } from '../../core/models/producto.model';
 import { CatalogoService } from '../../core/services/catalogo';
 
+const PRODUCTOS_POR_PAGINA = 15;
+
 @Component({
   selector: 'app-catalogo',
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, Pagination],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './catalogo.html',
   styleUrl: './catalogo.css',
@@ -17,6 +20,12 @@ export class Catalogo implements OnInit {
   private readonly router = inject(Router);
 
   protected readonly productos = signal<Producto[]>([]);
+  protected readonly pagina = signal(1);
+  protected readonly tamanoPagina = PRODUCTOS_POR_PAGINA;
+  protected readonly productosPagina = computed(() => {
+    const inicio = (this.pagina() - 1) * PRODUCTOS_POR_PAGINA;
+    return this.productos().slice(inicio, inicio + PRODUCTOS_POR_PAGINA);
+  });
   protected readonly cargando = signal(true);
   protected readonly error = signal<ApiError | null>(null);
 
@@ -39,6 +48,7 @@ export class Catalogo implements OnInit {
     this.catalogoService.obtenerProductos().subscribe({
       next: (productos) => {
         this.productos.set(productos);
+        this.pagina.set(1);
         this.cargando.set(false);
       },
       error: (e: unknown) => {

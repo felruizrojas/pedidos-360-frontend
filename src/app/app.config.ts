@@ -1,4 +1,5 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideAppInitializer, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -58,18 +59,41 @@ export function msalGuardConfigFactory() {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes), 
+    provideRouter(routes),
     provideClientHydration(withEventReplay()),
-    
+
     // CORRECCIÓN: Agregamos withFetch() para eliminar la advertencia NG02801 y estabilizar las llamadas
-    provideHttpClient(withInterceptorsFromDi(), withInterceptors([apiErrorInterceptor]), withFetch()), 
-    
+    provideHttpClient(withInterceptorsFromDi(), withInterceptors([apiErrorInterceptor]), withFetch()),
+
     { provide: HTTP_INTERCEPTORS, useClass: MsalInterceptor, multi: true },
     { provide: MSAL_INSTANCE, useFactory: msalInstanceFactory },
     { provide: MSAL_GUARD_CONFIG, useFactory: msalGuardConfigFactory },
     { provide: MSAL_INTERCEPTOR_CONFIG, useFactory: msalInterceptorConfigFactory },
     MsalService,
     MsalGuard,
-    MsalBroadcastService
+    MsalBroadcastService,
+
+    // Inicializa MSAL antes de que arranque la app, solo en el navegador (en SSR este mismo
+    // appConfig se reutiliza vía app.config.server.ts y no debe tocar MSAL). Esto asegura que
+    // authGuard y MsalInterceptor encuentren una instancia MSAL inicializada al entrar directo
+    // o refrescar (F5) en rutas protegidas como /catalogo o /dashboard/catalogo.
+    provideAppInitializer(async () => {
+      const platformId = inject(PLATFORM_ID);
+      if (!isPlatformBrowser(platformId)) {
+        return;
+      }
+
+      const msalService = inject(MsalService);
+      await msalService.instance.initialize();
+
+      // Si no hay cuenta activa pero existe alguna cuenta cacheada en sessionStorage
+      // (p. ej. tras un F5), la restauramos como activa.
+      if (!msalService.instance.getActiveAccount()) {
+        const accounts = msalService.instance.getAllAccounts();
+        if (accounts.length > 0) {
+          msalService.instance.setActiveAccount(accounts[0]);
+        }
+      }
+    })
   ]
 };

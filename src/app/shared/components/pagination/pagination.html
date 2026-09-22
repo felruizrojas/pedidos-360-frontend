@@ -1,0 +1,30 @@
+@if (totalPaginas() > 1) {
+  <nav aria-label="Paginación de resultados" class="flex items-center justify-center gap-1 pt-2">
+    <button type="button" (click)="irA(paginaActual() - 1)" [disabled]="paginaActual() === 1"
+      aria-label="Página anterior"
+      class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:pointer-events-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+      &laquo;
+    </button>
+
+    @for (item of paginas(); track $index) {
+      @if (item === '…') {
+        <span class="px-2 py-2 text-sm text-gray-400 select-none" aria-hidden="true">&hellip;</span>
+      } @else {
+        <button type="button" (click)="irA(item)" [attr.aria-current]="item === paginaActual() ? 'page' : null"
+          [attr.aria-label]="'Ir a la página ' + item"
+          class="min-w-9 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          [class]="item === paginaActual()
+            ? 'bg-indigo-600 text-white shadow-sm'
+            : 'text-gray-700 hover:bg-gray-100'">
+          {{ item }}
+        </button>
+      }
+    }
+
+    <button type="button" (click)="irA(paginaActual() + 1)" [disabled]="paginaActual() === totalPaginas()"
+      aria-label="Página siguiente"
+      class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:pointer-events-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+      &raquo;
+    </button>
+  </nav>
+}

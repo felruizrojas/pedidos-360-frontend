@@ -12,6 +12,13 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    // Las hijas (/dashboard/catalogo, /dashboard/perfil, etc.) también deben
+    // resolverse 100% en el cliente: dependen de la sesión MSAL y del guard
+    // de roles, que no existen durante el render en el servidor.
+    path: 'dashboard/**',
+    renderMode: RenderMode.Client
+  },
+  {
     path: 'auth-redirect',
     renderMode: RenderMode.Client
   },

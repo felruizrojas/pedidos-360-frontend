@@ -6,9 +6,9 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex flex-col md:flex-row min-h-screen">
+    <div class="flex flex-col md:flex-row md:h-screen md:overflow-hidden">
       <nav aria-label="Administración"
-        class="md:w-60 shrink-0 bg-white border-b md:border-b-0 md:border-r border-gray-100 p-4 flex flex-col gap-4 md:justify-between">
+        class="md:w-60 shrink-0 md:h-screen md:sticky md:top-0 md:overflow-y-auto bg-white border-b md:border-b-0 md:border-r border-gray-100 p-4 flex flex-col gap-4 md:justify-between">
         <div>
           <p class="px-3 pb-2 text-lg font-bold text-indigo-600 tracking-tight">Pedidos 360</p>
           <p class="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-gray-600">Administración</p>
@@ -47,7 +47,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         </ul>
       </nav>
 
-      <main class="flex-1 bg-gray-50 p-4 sm:p-8">
+      <main class="flex-1 bg-gray-50 p-4 sm:p-8 md:h-screen md:overflow-y-auto">
         <router-outlet />
       </main>
     </div>
