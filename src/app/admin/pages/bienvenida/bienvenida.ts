@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
+import { getNombre } from '../../../core/utils/user-profile';
 
 @Component({
   selector: 'app-bienvenida',
@@ -25,5 +26,5 @@ import { MsalService } from '@azure/msal-angular';
 })
 export class Bienvenida {
   private readonly msalService = inject(MsalService);
-  protected readonly nombre = this.msalService.instance.getActiveAccount()?.name?.split(' ')[0] ?? null;
+  protected readonly nombre = getNombre(this.msalService.instance.getActiveAccount()) || null;
 }

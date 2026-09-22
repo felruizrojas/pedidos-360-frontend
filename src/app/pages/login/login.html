@@ -3,9 +3,11 @@
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-8 space-y-6 transition-all duration-300 hover:shadow-2xl">
       <div class="text-center space-y-2">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-50 text-indigo-600 text-2xl font-bold mb-2" aria-hidden="true">
-          {{ (user.name ?? user.username).charAt(0).toUpperCase() }}
+          {{ (nombre() || user.username).charAt(0).toUpperCase() }}
         </div>
-        <h2 class="text-3xl font-extrabold tracking-tight text-gray-950">Mi perfil</h2>
+        <h2 class="text-3xl font-extrabold tracking-tight text-gray-950">
+          @if (nombre()) { ¡Hola, {{ nombre() }}! } @else { Mi perfil }
+        </h2>
         <p class="text-sm text-gray-500">Sesión iniciada en <span class="font-semibold text-indigo-600">Pedidos 360</span>.</p>
       </div>
 

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MsalService } from '@azure/msal-angular';
 import { AccountInfo } from '@azure/msal-browser';
 import { getUserRoles } from '../../core/utils/user-roles';
+import { getNombre } from '../../core/utils/user-profile';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -18,6 +19,7 @@ export class Login implements OnInit {
 
   readonly account = signal<AccountInfo | null>(null);
   readonly roles = computed(() => getUserRoles(this.account()));
+  readonly nombre = computed(() => getNombre(this.account()));
 
   constructor(private authService: MsalService) {}
 

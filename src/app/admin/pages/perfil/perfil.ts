@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MsalService } from '@azure/msal-angular';
 import { getUserRoles } from '../../../core/utils/user-roles';
+import { getApellido, getNombre } from '../../../core/utils/user-profile';
 
 @Component({
   selector: 'app-perfil',
@@ -14,7 +15,11 @@ import { getUserRoles } from '../../../core/utils/user-roles';
           <dl class="divide-y divide-gray-100 text-sm">
             <div class="py-3 flex justify-between gap-4">
               <dt class="text-gray-600">Nombre</dt>
-              <dd class="font-medium text-gray-900 text-right">{{ cuenta.name }}</dd>
+              <dd class="font-medium text-gray-900 text-right">{{ nombre }}</dd>
+            </div>
+            <div class="py-3 flex justify-between gap-4">
+              <dt class="text-gray-600">Apellido</dt>
+              <dd class="font-medium text-gray-900 text-right">{{ apellido }}</dd>
             </div>
             <div class="py-3 flex justify-between gap-4">
               <dt class="text-gray-600">Correo</dt>
@@ -49,6 +54,8 @@ export class Perfil {
   private readonly msalService = inject(MsalService);
 
   protected readonly cuenta = this.msalService.instance.getActiveAccount();
+  protected readonly nombre = getNombre(this.cuenta);
+  protected readonly apellido = getApellido(this.cuenta);
   protected readonly roles = getUserRoles(this.cuenta);
   protected readonly error = signal('');
 
