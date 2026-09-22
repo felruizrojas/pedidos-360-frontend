@@ -13,6 +13,26 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
+ * Rutas cuyo contenido depende de la sesión MSAL. Se marcan `no-store` para que el
+ * navegador nunca las guarde en el bfcache: así, al volver con "Atrás" después de
+ * cerrar sesión (o entre dos usuarios distintos en el mismo dispositivo), el
+ * navegador siempre pide la página de nuevo en vez de repintar una versión congelada
+ * con datos de la sesión anterior. El listener de `pageshow` en app.ts queda como
+ * segunda barrera para navegadores que no respeten este header.
+ */
+const RUTAS_SENSIBLES_A_SESION = ['/dashboard', '/catalogo', '/login', '/auth-redirect'];
+
+app.use((req, res, next) => {
+  const esRutaSensible = RUTAS_SENSIBLES_A_SESION.some(
+    (ruta) => req.path === ruta || req.path.startsWith(`${ruta}/`),
+  );
+  if (esRutaSensible) {
+    res.setHeader('Cache-Control', 'no-store');
+  }
+  next();
+});
+
+/**
  * Example Express Rest API endpoints can be defined here.
  * Uncomment and define endpoints as necessary.
  *
