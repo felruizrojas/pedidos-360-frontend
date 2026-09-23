@@ -1,0 +1,22 @@
+<footer class="bg-white border-t border-gray-100 mt-auto">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2.5">
+      <span class="flex items-center justify-center w-7 h-7 rounded bg-white shrink-0">
+        <img src="/icono.png" alt="" width="20" height="20" />
+      </span>
+      <span class="text-sm font-semibold text-gray-900">Pedidos 360</span>
+    </div>
+
+    <nav aria-label="Enlaces del pie de página" class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
+      <a routerLink="/inicio" class="text-gray-500 hover:text-indigo-600 transition-colors duration-200">Inicio</a>
+      @if (estaLogueado()) {
+        <a routerLink="/catalogo" class="text-gray-500 hover:text-indigo-600 transition-colors duration-200">Catálogo</a>
+      }
+      @if (puedeAccederDashboard()) {
+        <a routerLink="/dashboard" class="text-gray-500 hover:text-indigo-600 transition-colors duration-200">Dashboard</a>
+      }
+    </nav>
+
+    <p class="text-xs text-gray-400">&copy; {{ anioActual }} Pedidos 360. Todos los derechos reservados.</p>
+  </div>
+</footer>

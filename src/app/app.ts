@@ -4,11 +4,12 @@ import { MsalService } from '@azure/msal-angular';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { Navbar } from './shared/components/navbar/navbar';
+import { Footer } from './shared/components/footer/footer';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, Navbar], // Limpio y 100% Standalone
+  imports: [RouterOutlet, Navbar, Footer], // Limpio y 100% Standalone
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

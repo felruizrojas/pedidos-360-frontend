@@ -1,7 +1,14 @@
-<!-- La barra de navegación pública se queda fija arriba, salvo en la administración -->
-@if (!enAdmin()) {
-  <navbar></navbar>
-}
+<div class="min-h-screen flex flex-col">
+  <!-- La barra de navegación pública se queda fija arriba, salvo en la administración -->
+  @if (!enAdmin()) {
+    <navbar></navbar>
+  }
 
-<!-- Aquí adentro Angular inyectará la página actual (Dashboard, Login, etc.) -->
-<router-outlet></router-outlet>
+  <!-- Aquí adentro Angular inyectará la página actual (Dashboard, Login, etc.) -->
+  <router-outlet></router-outlet>
+
+  <!-- El footer público no aplica en /dashboard: ese layout tiene su propio menú lateral -->
+  @if (!enAdmin()) {
+    <app-footer></app-footer>
+  }
+</div>
