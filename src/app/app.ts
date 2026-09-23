@@ -1,10 +1,11 @@
-import { Component, afterNextRender, inject } from '@angular/core';
+import { Component, afterNextRender, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MsalService } from '@azure/msal-angular';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { Navbar } from './shared/components/navbar/navbar';
 import { Footer } from './shared/components/footer/footer';
+import { AuthState } from './core/services/auth-state';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,7 @@ import { Footer } from './shared/components/footer/footer';
 export class App {
   private readonly router = inject(Router);
   private readonly msalService = inject(MsalService);
+  private readonly authState = inject(AuthState);
 
   private readonly rutasProtegidas = ['/dashboard', '/catalogo'];
 
@@ -30,6 +32,18 @@ export class App {
           this.router.navigate(['/login']);
         }
       });
+    });
+
+    // Si la sesión se cierra en OTRA pestaña (AuthState.estaLogueado se actualiza solo vía el
+    // evento 'storage', ver auth-state.ts), esta pestaña se entera al instante aunque el usuario
+    // no haga nada acá: si está parado en una ruta protegida, se lo expulsa a /login de inmediato,
+    // en vez de esperar a que intente navegar y recién ahí el guard lo bloquee.
+    effect(() => {
+      const sinSesion = !this.authState.estaLogueado();
+      const enRutaProtegida = this.rutasProtegidas.some((ruta) => this.router.url.startsWith(ruta));
+      if (sinSesion && enRutaProtegida) {
+        this.router.navigate(['/login']);
+      }
     });
   }
 

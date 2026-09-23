@@ -29,7 +29,11 @@ export function msalInstanceFactory() {
       postLogoutRedirectUri: environment.postLogoutRedirectUri
     },
     cache: {
-      cacheLocation: 'sessionStorage'
+      // localStorage (no sessionStorage) para que la sesión se comparta entre pestañas del
+      // mismo origen: loguearte en una pestaña deja logueadas también las que ya estaban
+      // abiertas y las nuevas que se abran después. El logout también se sincroniza entre
+      // pestañas vía el evento 'storage' (ver MsalBroadcastService más abajo).
+      cacheLocation: 'localStorage'
     }
   });
 }
@@ -86,8 +90,9 @@ export const appConfig: ApplicationConfig = {
       const msalService = inject(MsalService);
       await msalService.instance.initialize();
 
-      // Si no hay cuenta activa pero existe alguna cuenta cacheada en sessionStorage
-      // (p. ej. tras un F5), la restauramos como activa.
+      // Si no hay cuenta activa pero existe alguna cuenta cacheada en localStorage
+      // (p. ej. tras un F5, o en una pestaña nueva con sesión ya iniciada en otra), la
+      // restauramos como activa.
       if (!msalService.instance.getActiveAccount()) {
         const accounts = msalService.instance.getAllAccounts();
         if (accounts.length > 0) {

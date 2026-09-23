@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
 import { AuthenticationResult } from '@azure/msal-browser';
 import { firstValueFrom } from 'rxjs';
+import { AuthState } from '../../../core/services/auth-state';
 
 @Component({
   selector: 'app-auth-redirect',
@@ -14,6 +15,7 @@ import { firstValueFrom } from 'rxjs';
 export class AuthRedirect implements OnInit {
   private readonly msalService = inject(MsalService);
   private readonly router = inject(Router);
+  private readonly authState = inject(AuthState);
 
   async ngOnInit(): Promise<void> {
     if (typeof window === 'undefined') {
@@ -42,6 +44,10 @@ export class AuthRedirect implements OnInit {
     } catch (err) {
       console.error('Error al procesar la respuesta de Azure:', err);
     } finally {
+      // El evento 'storage' del navegador NO dispara en la misma pestaña que hizo el
+      // cambio (solo en las demás), así que acá hay que refrescar el estado a mano para
+      // que Navbar/Footer reflejen el login recién hecho sin esperar otra navegación.
+      this.authState.refrescar();
       this.router.navigate(['/inicio']);
     }
   }

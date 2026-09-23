@@ -1,8 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { MsalService } from '@azure/msal-angular';
-import { getUserRoles } from '../../../core/utils/user-roles';
+import { AuthState } from '../../../core/services/auth-state';
 
 @Component({
   selector: 'navbar',
@@ -12,23 +11,20 @@ import { getUserRoles } from '../../../core/utils/user-roles';
   styleUrl: './navbar.css'
 })
 export class Navbar {
-  private readonly msalService = inject(MsalService);
+  // Signal-based: se actualiza solo si la sesión cambia en otra pestaña (ver AuthState),
+  // sin depender de que el usuario navegue o interactúe en esta para refrescar.
+  private readonly authState = inject(AuthState);
   private readonly allowedDashboardRoles = ['Admin', 'Operador'];
 
   isMenuOpen = false;
 
+  readonly canAccessDashboard = computed(() =>
+    this.authState.roles().some((role) => this.allowedDashboardRoles.includes(role)),
+  );
+
+  readonly userName = computed(() => this.authState.nombre() || null);
+
   toggleMenu(): void {
     this.isMenuOpen = !this.isMenuOpen;
-  }
-
-  canAccessDashboard(): boolean {
-    const account = this.msalService.instance.getActiveAccount();
-    const roles = getUserRoles(account);
-    return roles.some((role) => this.allowedDashboardRoles.includes(role));
-  }
-
-  userName(): string | null {
-    const account = this.msalService.instance.getActiveAccount();
-    return account?.name?.split(' ')[0] ?? null; // solo el primer nombre
   }
 }
