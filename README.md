@@ -1,60 +1,63 @@
-# Pedidos360Frontend
+# pedidos-360-frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.9.
+Frontend de **Pedidos360** (DSY1107). Angular 21 (standalone, signals, SSR) · MSAL Angular 5 · Tailwind 4.
+Login con **Microsoft Entra ID** (OIDC Authorization Code + PKCE) y consumo del backend **solo a través del API Gateway**.
 
-## Development server
+## Qué cubre de la evaluación
+| Requisito | Implementación |
+|---|---|
+| Tenant IDaaS con usuarios | Entra ID, tenant `0bfad962-b91d-465a-b769-8e71565efe7d` (usuarios abajo) |
+| Aplicación en el tenant | App SPA `72258f06-7c3b-4189-8f22-a0abdc893ae2` (redirect URIs local + AWS) · App API `d80d5009-1b8a-49b2-a3da-08a8bbd00936` (scope `access_as_user`, App roles Admin/Operador/Cliente) |
+| OIDC Authorization Code + PKCE | `PublicClientApplication` + `loginRedirect` (MSAL genera `code_verifier`/`code_challenge`); sin flujo implícito |
+| Login / logout | `pages/login` (`loginRedirect` / `logoutRedirect`), `auth-redirect` como redirect URI, sesión en `localStorage` |
+| JWT en llamadas al backend | `MsalInterceptor`: `protectedResourceMap` `${apiBaseUrl}/api/*` → `api://…/access_as_user` (Bearer automático, renovación silenciosa) |
+| Guards y roles | `authGuard`: `/catalogo` exige sesión; `/dashboard` exige rol `Admin`/`Operador` (claim `roles` del ID token) |
+| Manejo de errores | `apiErrorInterceptor` normaliza 400/401/403/404/0/502/503 a `ApiError` y la UI los muestra (`role="alert"`) |
+| Consumo vía API Manager | `environment.ts` → `apiBaseUrl = https://u8thxu2opa.execute-api.us-east-1.amazonaws.com` |
+| Despliegue en la nube | EC2 + nginx + Let's Encrypt (`https://52-71-122-5.sslip.io`); GitHub Actions: `ng build` → SCP → `systemctl restart pedidos360-frontend` |
 
-To start a local development server, run:
+## Vistas
+| Ruta | Acceso | Descripción |
+|---|---|---|
+| `/inicio` | público | Landing |
+| `/login` | público | Iniciar / cerrar sesión |
+| `/catalogo` | sesión | Catálogo (GET `/api/catalog/products`), filtros y paginación |
+| `/dashboard` | Admin / Operador | Bienvenida, perfil (claims del token) y alta de productos (POST) |
 
+## Entornos
+| | Local (`ng serve`) | AWS (`ng build`) |
+|---|---|---|
+| Archivo | `environment.development.ts` | `environment.ts` |
+| `apiBaseUrl` | `http://localhost:8080` (BFF directo) | `https://u8thxu2opa.execute-api.us-east-1.amazonaws.com` (API Gateway) |
+| `redirectUri` | `http://localhost:4200/auth-redirect` | `https://52-71-122-5.sslip.io/auth-redirect` |
+
+> **Roles (decisión actual):** `forzarAdminTemporal: true` en ambos entornos: todo usuario logueado se trata como Admin (hardcodeado). En una fase posterior Azure asignará los App roles y la bandera pasará a `false` para usar el claim `roles`; el guard y el backend (`ENFORCE_ROLES`) ya están preparados.
+
+## Ejecutar
 ```bash
-ng serve
+npm ci
+npm start                     # http://localhost:4200 (requiere BFF en :8080 y catálogo en :8081)
+npm test                      # Vitest
+npm run build                 # build producción (SSR) en dist/
+npm run serve:ssr:pedidos-360-frontend   # sirve el build en :4000
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Usuarios de prueba (Entra ID)
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Admin | `<completar>@<tenant>.onmicrosoft.com` | `<completar>` |
+| Operador | `<completar>@<tenant>.onmicrosoft.com` | `<completar>` |
+| Cliente | `<completar>@<tenant>.onmicrosoft.com` | `<completar>` |
 
-## Code scaffolding
+## Pruebas manuales
+**Navegador (flujo completo):** abrir la URL → Iniciar sesión → login en Entra ID → `/catalogo` carga productos. En DevTools → Network: la llamada a `/api/catalog/products` va al API Gateway con `Authorization: Bearer <JWT>` (el token se puede decodificar en jwt.ms: `aud`, `iss`, `scp=access_as_user`, `roles`).
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+**curl** (la app es SSR, el HTML responde sin sesión; los datos requieren token):
 ```bash
-ng generate component component-name
+# Local
+curl -I http://localhost:4200/inicio              # 200
+# AWS
+curl -I https://52-71-122-5.sslip.io/inicio       # 200, HTTPS válido (Let's Encrypt)
+curl -I http://52-71-122-5.sslip.io               # 301 → HTTPS
 ```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
-#
+Las pruebas de API con y sin token (local y AWS) están en el README de `ms-pedidos360-bff`; el `TOKEN` se copia desde DevTools como se describe arriba.
