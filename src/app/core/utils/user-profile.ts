@@ -25,11 +25,3 @@ export function getApellido(account: AccountInfo | null | undefined): string {
   const partes = account?.name?.split(' ') ?? [];
   return partes.slice(1).join(' ');
 }
-
-/** Nombre completo, priorizando given_name + family_name sobre el display name. */
-export function getNombreCompleto(account: AccountInfo | null | undefined): string {
-  const nombre = getNombre(account);
-  const apellido = getApellido(account);
-  const completo = [nombre, apellido].filter(Boolean).join(' ');
-  return completo || account?.name || '';
-}
