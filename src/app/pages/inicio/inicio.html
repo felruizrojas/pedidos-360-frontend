@@ -1,8 +1,16 @@
-<!-- Contenido Principal (Sección de Bienvenida) -->
-<main class="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4">
-  <div class="text-center max-w-2xl mx-auto space-y-6">
+<!-- Contenido Principal (Sección de Bienvenida): mismo alto que tenía antes
+     (viewport completo menos el navbar), el footer queda debajo al hacer scroll. -->
+<main class="relative min-h-[calc(100vh-4rem)] flex items-center justify-center overflow-hidden px-4">
+  <!-- Video de fondo, decorativo: autoplay silencioso, sin controles ni foco -->
+  <video class="absolute inset-0 w-full h-full object-cover" src="/video_repartidor.mp4" autoplay muted loop
+    playsinline aria-hidden="true" tabindex="-1"></video>
+
+  <!-- Velo claro sobre el video para que el texto siga siendo legible -->
+  <div class="absolute inset-0 bg-linear-to-br from-indigo-50/50 via-white/40 to-purple-50/50" aria-hidden="true"></div>
+
+  <div class="relative text-center max-w-2xl mx-auto space-y-6">
     <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-gray-900">
-      Bienvenid@s a 
+      Bienvenid@s a
       <span class="block text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-purple-600 mt-2">
         Pedidos 360
       </span>
