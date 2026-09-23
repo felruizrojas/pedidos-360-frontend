@@ -14,12 +14,12 @@
 
       <div class="sm:col-span-2">
         <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre *</label>
-        <input id="nombre" type="text" formControlName="nombre" maxlength="255" required
-          [attr.aria-invalid]="(form.controls.nombre.touched && form.controls.nombre.invalid) || !!erroresCampo()['nombre']"
+        <input id="nombre" type="text" formControlName="nombre" [attr.maxlength]="NOMBRE_MAX_LENGTH" required
+          [attr.aria-invalid]="!!errorNombre || !!erroresCampo()['nombre']"
           aria-describedby="err-nombre err-nombre-srv"
           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
-        @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
-          <p id="err-nombre" role="alert" class="mt-1 text-sm text-red-700">El nombre es obligatorio (máx. 255 caracteres).</p>
+        @if (errorNombre; as mensaje) {
+          <p id="err-nombre" role="alert" class="mt-1 text-sm text-red-700">{{ mensaje }}</p>
         }
         @if (erroresCampo()['nombre']) {
           <p id="err-nombre-srv" role="alert" class="mt-1 text-sm text-red-700">{{ erroresCampo()['nombre'] }}</p>
@@ -28,23 +28,26 @@
 
       <div class="sm:col-span-2">
         <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
-        <textarea id="descripcion" rows="3" formControlName="descripcion"
-          [attr.aria-invalid]="!!erroresCampo()['descripcion']"
-          aria-describedby="err-descripcion"
+        <textarea id="descripcion" rows="3" formControlName="descripcion" [attr.maxlength]="DESCRIPCION_MAX_LENGTH"
+          [attr.aria-invalid]="!!errorDescripcion || !!erroresCampo()['descripcion']"
+          aria-describedby="err-descripcion err-descripcion-srv"
           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600"></textarea>
+        @if (errorDescripcion; as mensaje) {
+          <p id="err-descripcion" role="alert" class="mt-1 text-sm text-red-700">{{ mensaje }}</p>
+        }
         @if (erroresCampo()['descripcion']) {
-          <p id="err-descripcion" role="alert" class="mt-1 text-sm text-red-700">{{ erroresCampo()['descripcion'] }}</p>
+          <p id="err-descripcion-srv" role="alert" class="mt-1 text-sm text-red-700">{{ erroresCampo()['descripcion'] }}</p>
         }
       </div>
 
       <div>
         <label for="precio" class="block text-sm font-medium text-gray-700">Precio *</label>
-        <input id="precio" type="number" step="1" min="1" formControlName="precio" required
-          [attr.aria-invalid]="(form.controls.precio.touched && form.controls.precio.invalid) || !!erroresCampo()['precio']"
+        <input id="precio" type="number" step="1" min="1" [attr.max]="PRECIO_MAX" formControlName="precio" required
+          [attr.aria-invalid]="!!errorPrecio || !!erroresCampo()['precio']"
           aria-describedby="err-precio err-precio-srv"
           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
-        @if (form.controls.precio.touched && form.controls.precio.invalid) {
-          <p id="err-precio" role="alert" class="mt-1 text-sm text-red-700">El precio debe ser un monto entero mayor que 0.</p>
+        @if (errorPrecio; as mensaje) {
+          <p id="err-precio" role="alert" class="mt-1 text-sm text-red-700">{{ mensaje }}</p>
         }
         @if (erroresCampo()['precio']) {
           <p id="err-precio-srv" role="alert" class="mt-1 text-sm text-red-700">{{ erroresCampo()['precio'] }}</p>
@@ -53,12 +56,12 @@
 
       <div>
         <label for="stock" class="block text-sm font-medium text-gray-700">Stock *</label>
-        <input id="stock" type="number" step="1" min="0" formControlName="stock" required
-          [attr.aria-invalid]="(form.controls.stock.touched && form.controls.stock.invalid) || !!erroresCampo()['stock']"
+        <input id="stock" type="number" step="1" min="0" [attr.max]="STOCK_MAX" formControlName="stock" required
+          [attr.aria-invalid]="!!errorStock || !!erroresCampo()['stock']"
           aria-describedby="err-stock err-stock-srv"
           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
-        @if (form.controls.stock.touched && form.controls.stock.invalid) {
-          <p id="err-stock" role="alert" class="mt-1 text-sm text-red-700">El stock debe ser un entero de 0 o más.</p>
+        @if (errorStock; as mensaje) {
+          <p id="err-stock" role="alert" class="mt-1 text-sm text-red-700">{{ mensaje }}</p>
         }
         @if (erroresCampo()['stock']) {
           <p id="err-stock-srv" role="alert" class="mt-1 text-sm text-red-700">{{ erroresCampo()['stock'] }}</p>
