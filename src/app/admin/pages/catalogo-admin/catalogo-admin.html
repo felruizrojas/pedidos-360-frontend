@@ -115,6 +115,6 @@
     </div>
 
     <app-pagination [paginaActual]="pagina()" [totalItems]="productos().length" [tamanoPagina]="tamanoPagina"
-      (paginaCambiada)="pagina.set($event)" />
+      (paginaCambiada)="cambiarPagina($event)" />
   }
 </div>

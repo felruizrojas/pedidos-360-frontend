@@ -1,10 +1,11 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Pagination } from '../../shared/components/pagination/pagination';
 import { ApiError, esApiError } from '../../core/models/api-error.model';
 import { Producto } from '../../core/models/producto.model';
 import { CatalogoService } from '../../core/services/catalogo';
+import { actualizarPaginaEnUrl, leerPaginaDeUrl } from '../../core/utils/pagina-url';
 
 const PRODUCTOS_POR_PAGINA = 15;
 
@@ -18,9 +19,10 @@ const PRODUCTOS_POR_PAGINA = 15;
 export class Catalogo implements OnInit {
   private readonly catalogoService = inject(CatalogoService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly productos = signal<Producto[]>([]);
-  protected readonly pagina = signal(1);
+  protected readonly pagina = signal(leerPaginaDeUrl(this.route));
   protected readonly tamanoPagina = PRODUCTOS_POR_PAGINA;
   protected readonly productosPagina = computed(() => {
     const inicio = (this.pagina() - 1) * PRODUCTOS_POR_PAGINA;
@@ -48,7 +50,12 @@ export class Catalogo implements OnInit {
     this.catalogoService.obtenerProductos().subscribe({
       next: (productos) => {
         this.productos.set(productos);
-        this.pagina.set(1);
+        // Si la página pedida en la URL quedó fuera de rango (p. ej. un deep-link
+        // viejo con más páginas de las que ahora hay productos), se ajusta a la última válida.
+        const totalPaginas = Math.max(1, Math.ceil(productos.length / PRODUCTOS_POR_PAGINA));
+        if (this.pagina() > totalPaginas) {
+          this.cambiarPagina(totalPaginas);
+        }
         this.cargando.set(false);
       },
       error: (e: unknown) => {
@@ -61,5 +68,10 @@ export class Catalogo implements OnInit {
         this.error.set(apiError);
       },
     });
+  }
+
+  protected cambiarPagina(pagina: number): void {
+    this.pagina.set(pagina);
+    actualizarPaginaEnUrl(this.router, this.route, pagina);
   }
 }

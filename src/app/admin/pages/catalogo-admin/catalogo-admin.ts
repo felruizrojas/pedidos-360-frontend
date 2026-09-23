@@ -1,10 +1,12 @@
 import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import { ApiError, esApiError } from '../../../core/models/api-error.model';
 import { NuevoProducto, Producto } from '../../../core/models/producto.model';
 import { CatalogoService } from '../../../core/services/catalogo';
+import { actualizarPaginaEnUrl, leerPaginaDeUrl } from '../../../core/utils/pagina-url';
 
 const PRODUCTOS_POR_PAGINA = 15;
 
@@ -17,9 +19,11 @@ const PRODUCTOS_POR_PAGINA = 15;
 export class CatalogoAdmin implements OnInit {
   private readonly catalogoService = inject(CatalogoService);
   private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly productos = signal<Producto[]>([]);
-  protected readonly pagina = signal(1);
+  protected readonly pagina = signal(leerPaginaDeUrl(this.route));
   protected readonly tamanoPagina = PRODUCTOS_POR_PAGINA;
   protected readonly productosPagina = computed(() => {
     const inicio = (this.pagina() - 1) * PRODUCTOS_POR_PAGINA;
@@ -50,7 +54,12 @@ export class CatalogoAdmin implements OnInit {
     this.catalogoService.obtenerProductos().subscribe({
       next: (productos) => {
         this.productos.set(productos);
-        this.pagina.set(1);
+        // Si la página pedida en la URL quedó fuera de rango (p. ej. un deep-link
+        // viejo con más páginas de las que ahora hay productos), se ajusta a la última válida.
+        const totalPaginas = Math.max(1, Math.ceil(productos.length / PRODUCTOS_POR_PAGINA));
+        if (this.pagina() > totalPaginas) {
+          this.cambiarPagina(totalPaginas);
+        }
         this.cargando.set(false);
       },
       error: (e: unknown) => {
@@ -63,6 +72,11 @@ export class CatalogoAdmin implements OnInit {
         this.cargando.set(false);
       },
     });
+  }
+
+  protected cambiarPagina(pagina: number): void {
+    this.pagina.set(pagina);
+    actualizarPaginaEnUrl(this.router, this.route, pagina);
   }
 
   protected alternarForm(): void {
