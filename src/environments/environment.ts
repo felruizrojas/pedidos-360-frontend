@@ -6,7 +6,7 @@ export const environment = {
   spaClientId: '72258f06-7c3b-4189-8f22-a0abdc893ae2',
   apiClientId: 'd80d5009-1b8a-49b2-a3da-08a8bbd00936',
   apiBaseUrl: 'https://u8thxu2opa.execute-api.us-east-1.amazonaws.com',
-  redirectUri: 'https://52-71-122-5.sslip.io/auth-redirect',
-  postLogoutRedirectUri: 'https://52-71-122-5.sslip.io',
+  redirectUri: 'https://pedidos360-felipe.vercel.app/auth-redirect',
+  postLogoutRedirectUri: 'https://pedidos360-felipe.vercel.app',
   forzarAdminTemporal: true,
 };

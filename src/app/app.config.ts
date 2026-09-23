@@ -1,8 +1,6 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideAppInitializer, inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideAppInitializer, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 // Importaciones de Angular HTTP con withFetch
 import { provideHttpClient, withInterceptorsFromDi, withInterceptors, withFetch, HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -64,7 +62,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideClientHydration(withEventReplay()),
 
     // CORRECCIÓN: Agregamos withFetch() para eliminar la advertencia NG02801 y estabilizar las llamadas
     provideHttpClient(withInterceptorsFromDi(), withInterceptors([apiErrorInterceptor]), withFetch()),
@@ -77,16 +74,10 @@ export const appConfig: ApplicationConfig = {
     MsalGuard,
     MsalBroadcastService,
 
-    // Inicializa MSAL antes de que arranque la app, solo en el navegador (en SSR este mismo
-    // appConfig se reutiliza vía app.config.server.ts y no debe tocar MSAL). Esto asegura que
+    // Inicializa MSAL antes de que arranque la app. Esto asegura que
     // authGuard y MsalInterceptor encuentren una instancia MSAL inicializada al entrar directo
     // o refrescar (F5) en rutas protegidas como /catalogo o /dashboard/catalogo.
     provideAppInitializer(async () => {
-      const platformId = inject(PLATFORM_ID);
-      if (!isPlatformBrowser(platformId)) {
-        return;
-      }
-
       const msalService = inject(MsalService);
       await msalService.instance.initialize();
 
