@@ -37,6 +37,11 @@ export function normalizarNombreProducto(nombre: string): string {
   return nombre.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+/** Quita cualquier carácter que no sea letra o espacio (para inputs de solo-texto, ej. buscador). */
+export function sanearSoloLetras(valor: string): string {
+  return valor.replace(/[^A-Za-zÁÉÍÓÚÑÜáéíóúñü\s]/g, '');
+}
+
 /**
  * Valida que el nombre no coincida (ignorando mayúsculas/espacios) con el de un
  * producto ya existente en el catálogo. `obtenerNombresExistentes` se evalúa en

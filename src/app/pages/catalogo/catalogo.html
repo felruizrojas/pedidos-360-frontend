@@ -28,28 +28,38 @@
       </div>
     } @else if (productos().length === 0) {
       <p class="text-center text-gray-600">Aún no hay productos en el catálogo.</p>
+    } @else if (productosDisponibles().length === 0) {
+      <p class="text-center text-gray-600">No hay productos con stock disponible en este momento.</p>
     } @else {
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        @for (item of productosPagina(); track item.id) {
-          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 space-y-3 transition-all duration-300 hover:shadow-2xl">
-            <h2 class="text-lg font-bold text-gray-900">{{ item.nombre }}</h2>
+      <app-catalogo-filtros class="block mb-6" [busqueda]="busqueda()" [orden]="orden()"
+        (busquedaCambiada)="onBusquedaCambiada($event)" (ordenCambiada)="onOrdenCambiada($event)"
+        (limpiar)="limpiarFiltros()" />
 
-            <p class="text-sm text-gray-500">{{ item.descripcion }}</p>
+      @if (resultado().length === 0) {
+        <p class="text-center text-gray-600">No se encontraron productos que coincidan con "{{ busqueda() }}".</p>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (item of productosPagina(); track item.id) {
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 space-y-3 transition-all duration-300 hover:shadow-2xl">
+              <h2 class="text-lg font-bold text-gray-900">{{ item.nombre }}</h2>
 
-            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-              <span class="text-xl font-extrabold text-gray-900">
-                ${{ item.precio | number:'1.0-0' }}
-              </span>
-              <span class="text-xs font-medium text-gray-400">
-                Stock: {{ item.stock }}
-              </span>
+              <p class="text-sm text-gray-500 break-words">{{ item.descripcion }}</p>
+
+              <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                <span class="text-xl font-extrabold text-gray-900">
+                  ${{ item.precio | number:'1.0-0' }}
+                </span>
+                <span class="text-xs font-medium text-gray-400">
+                  Stock: {{ item.stock }}
+                </span>
+              </div>
             </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
 
-      <app-pagination [paginaActual]="pagina()" [totalItems]="productos().length" [tamanoPagina]="tamanoPagina"
-        (paginaCambiada)="cambiarPagina($event)" />
+        <app-pagination [paginaActual]="pagina()" [totalItems]="resultado().length" [tamanoPagina]="tamanoPagina"
+          (paginaCambiada)="cambiarPagina($event)" />
+      }
     }
 
   </div>

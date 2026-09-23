@@ -91,33 +91,41 @@
   } @else if (productos().length === 0) {
     <p class="text-gray-600">Aún no hay productos en el catálogo.</p>
   } @else {
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-      <table class="w-full text-sm text-left">
-        <caption class="sr-only">Productos del catálogo</caption>
-        <thead class="bg-gray-50 text-gray-700">
-          <tr>
-            <th scope="col" class="px-4 py-3 font-semibold">ID</th>
-            <th scope="col" class="px-4 py-3 font-semibold">Nombre</th>
-            <th scope="col" class="px-4 py-3 font-semibold">Descripción</th>
-            <th scope="col" class="px-4 py-3 font-semibold text-right">Precio</th>
-            <th scope="col" class="px-4 py-3 font-semibold text-right">Stock</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 text-gray-800">
-          @for (p of productosPagina(); track p.id) {
-            <tr>
-              <td class="px-4 py-3">{{ p.id }}</td>
-              <td class="px-4 py-3 font-medium">{{ p.nombre }}</td>
-              <td class="px-4 py-3">{{ p.descripcion }}</td>
-              <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
-              <td class="px-4 py-3 text-right">{{ p.stock }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <app-catalogo-filtros class="block mb-6" [busqueda]="busqueda()" [orden]="orden()"
+      (busquedaCambiada)="onBusquedaCambiada($event)" (ordenCambiada)="onOrdenCambiada($event)"
+      (limpiar)="limpiarFiltros()" />
 
-    <app-pagination [paginaActual]="pagina()" [totalItems]="productos().length" [tamanoPagina]="tamanoPagina"
-      (paginaCambiada)="cambiarPagina($event)" />
+    @if (resultado().length === 0) {
+      <p class="text-gray-600">No se encontraron productos que coincidan con "{{ busqueda() }}".</p>
+    } @else {
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <caption class="sr-only">Productos del catálogo</caption>
+          <thead class="bg-gray-50 text-gray-700">
+            <tr>
+              <th scope="col" class="px-4 py-3 font-semibold">ID</th>
+              <th scope="col" class="px-4 py-3 font-semibold">Nombre</th>
+              <th scope="col" class="px-4 py-3 font-semibold">Descripción</th>
+              <th scope="col" class="px-4 py-3 font-semibold text-right">Precio</th>
+              <th scope="col" class="px-4 py-3 font-semibold text-right">Stock</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 text-gray-800">
+            @for (p of productosPagina(); track p.id) {
+              <tr>
+                <td class="px-4 py-3">{{ p.id }}</td>
+                <td class="px-4 py-3 font-medium">{{ p.nombre }}</td>
+                <td class="px-4 py-3 max-w-xs break-words">{{ p.descripcion }}</td>
+                <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
+                <td class="px-4 py-3 text-right">{{ p.stock }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pagination [paginaActual]="pagina()" [totalItems]="resultado().length" [tamanoPagina]="tamanoPagina"
+        (paginaCambiada)="cambiarPagina($event)" />
+    }
   }
 </div>

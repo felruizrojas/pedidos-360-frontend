@@ -3,10 +3,13 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } 
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Pagination } from '../../../shared/components/pagination/pagination';
+import { CatalogoFiltros } from '../../../shared/components/catalogo-filtros/catalogo-filtros';
 import { ApiError, esApiError } from '../../../core/models/api-error.model';
 import { NuevoProducto, Producto } from '../../../core/models/producto.model';
+import { OrdenCatalogo } from '../../../core/models/orden-catalogo.model';
 import { CatalogoService } from '../../../core/services/catalogo';
 import { actualizarPaginaEnUrl, leerPaginaDeUrl } from '../../../core/utils/pagina-url';
+import { filtrarYOrdenarProductos } from '../../../core/utils/catalogo-filtro.util';
 import {
   DESCRIPCION_MAX_LENGTH,
   DESCRIPCION_PATTERN,
@@ -23,7 +26,7 @@ const PRODUCTOS_POR_PAGINA = 15;
 
 @Component({
   selector: 'app-catalogo-admin',
-  imports: [ReactiveFormsModule, CurrencyPipe, Pagination],
+  imports: [ReactiveFormsModule, CurrencyPipe, Pagination, CatalogoFiltros],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './catalogo-admin.html',
 })
@@ -34,11 +37,17 @@ export class CatalogoAdmin implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly productos = signal<Producto[]>([]);
+  protected readonly busqueda = signal('');
+  protected readonly orden = signal<OrdenCatalogo>('ninguno');
+  protected readonly resultado = computed(() =>
+    filtrarYOrdenarProductos(this.productos(), this.busqueda(), this.orden()),
+  );
+
   protected readonly pagina = signal(leerPaginaDeUrl(this.route));
   protected readonly tamanoPagina = PRODUCTOS_POR_PAGINA;
   protected readonly productosPagina = computed(() => {
     const inicio = (this.pagina() - 1) * PRODUCTOS_POR_PAGINA;
-    return this.productos().slice(inicio, inicio + PRODUCTOS_POR_PAGINA);
+    return this.resultado().slice(inicio, inicio + PRODUCTOS_POR_PAGINA);
   });
   protected readonly cargando = signal(true);
   protected readonly errorCarga = signal('');
@@ -147,6 +156,22 @@ export class CatalogoAdmin implements OnInit {
   protected cambiarPagina(pagina: number): void {
     this.pagina.set(pagina);
     actualizarPaginaEnUrl(this.router, this.route, pagina);
+  }
+
+  protected onBusquedaCambiada(valor: string): void {
+    this.busqueda.set(valor);
+    this.cambiarPagina(1);
+  }
+
+  protected onOrdenCambiada(valor: OrdenCatalogo): void {
+    this.orden.set(valor);
+    this.cambiarPagina(1);
+  }
+
+  protected limpiarFiltros(): void {
+    this.busqueda.set('');
+    this.orden.set('ninguno');
+    this.cambiarPagina(1);
   }
 
   protected alternarForm(): void {

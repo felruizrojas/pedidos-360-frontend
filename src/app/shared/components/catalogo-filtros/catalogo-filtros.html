@@ -1,0 +1,23 @@
+<div class="flex flex-wrap md:flex-nowrap items-center gap-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+  <div class="flex-1 min-w-[200px]">
+    <label for="filtro-busqueda" class="sr-only">Buscar producto por nombre</label>
+    <input id="filtro-busqueda" type="text" [value]="busqueda()" (input)="onBusqueda($event)"
+      placeholder="Buscar por nombre…" autocomplete="off"
+      class="w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+  </div>
+
+  <div>
+    <label for="filtro-orden" class="sr-only">Ordenar por</label>
+    <select id="filtro-orden" [value]="orden()" (change)="onOrden($event)"
+      class="rounded-lg border border-gray-300 px-3 py-2 bg-white focus-visible:outline-2 focus-visible:outline-indigo-600">
+      @for (opcion of opciones; track opcion.valor) {
+        <option [value]="opcion.valor">{{ opcion.etiqueta }}</option>
+      }
+    </select>
+  </div>
+
+  <button type="button" (click)="limpiar.emit()" [disabled]="!hayFiltrosActivos()"
+    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:pointer-events-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+    Limpiar filtros
+  </button>
+</div>
