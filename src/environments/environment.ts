@@ -8,5 +8,5 @@ export const environment = {
   apiBaseUrl: 'https://u8thxu2opa.execute-api.us-east-1.amazonaws.com',
   redirectUri: 'https://52-71-122-5.sslip.io/auth-redirect',
   postLogoutRedirectUri: 'https://52-71-122-5.sslip.io',
-  forzarAdminTemporal: false,
+  forzarAdminTemporal: true,
 };
