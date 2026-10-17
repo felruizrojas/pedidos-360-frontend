@@ -1,11 +1,12 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
-import { getUserRoles } from '../utils/user-roles';
+import { AuthState } from '../services/auth-state';
 
-export const authGuard: CanActivateFn = (route, state) => {
+export const authGuard: CanActivateFn = async (route, state) => {
   const router = inject(Router);
   const msalService = inject(MsalService);
+  const authState = inject(AuthState);
 
   // 1. Toda ruta que use este guard exige, como mínimo, sesión activa
   const account = msalService.instance.getActiveAccount();
@@ -22,8 +23,8 @@ export const authGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // 4. Evaluamos si alguno de los roles del usuario (claim del ID token) está permitido
-  const userRoles = getUserRoles(account);
+  // 4. Evaluamos si alguno de los roles del usuario (claim del access token de la API) está permitido
+  const userRoles = await authState.cargarRoles();
   if (userRoles.some((role) => expectedRoles.includes(role))) {
     return true;
   }

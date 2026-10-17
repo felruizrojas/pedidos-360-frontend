@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
-import { NuevoProducto, Producto } from '../models/producto.model';
+import { ActualizacionProducto, NuevoProducto, Producto } from '../models/producto.model';
 import { CatalogoService } from './catalogo';
 
 describe('CatalogoService', () => {
@@ -46,5 +46,16 @@ describe('CatalogoService', () => {
     expect(req.request.body).toEqual(nuevo);
     req.flush(producto);
     expect(res).toEqual(producto);
+  });
+
+  it('actualiza precio y stock con PUT', () => {
+    const cambios: ActualizacionProducto = { precio: 90, stock: 5 };
+    let res: Producto | undefined;
+    service.actualizarProducto(1, cambios).subscribe((r) => (res = r));
+    const req = http.expectOne(`${url}/1`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual(cambios);
+    req.flush({ ...producto, ...cambios });
+    expect(res).toEqual({ ...producto, ...cambios });
   });
 });

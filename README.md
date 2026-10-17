@@ -37,7 +37,7 @@ Login con **Microsoft Entra ID** (OIDC Authorization Code + PKCE) y consumo del 
 | `apiBaseUrl` | `http://localhost:8080` (BFF directo) | `https://u8thxu2opa.execute-api.us-east-1.amazonaws.com` (API Gateway) |
 | `redirectUri` | `http://localhost:4200/auth-redirect` | `https://<tu-proyecto>.vercel.app/auth-redirect` |
 
-> **Roles (decisión actual):** `forzarAdminTemporal: true` en ambos entornos: todo usuario logueado se trata como Admin (hardcodeado). En una fase posterior Azure asignará los App roles y la bandera pasará a `false` para usar el claim `roles`; el guard y el backend (`ENFORCE_ROLES`) ya están preparados.
+> **Roles:** se toman del claim `roles` del **access token de la API** (App roles definidos y asignados en el app registration de la API: `Admin`, `Operador`, `Cliente`), igual que el BFF. No hace falta definirlos en la SPA. Un usuario sin App role asignado no accede al dashboard.
 
 ## Ejecutar
 ```bash

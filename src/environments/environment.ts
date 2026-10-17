@@ -8,5 +8,4 @@ export const environment = {
   apiBaseUrl: 'https://djyz5il0mk.execute-api.us-east-1.amazonaws.com',
   redirectUri: 'https://pedidos360-fel.vercel.app/auth-redirect',
   postLogoutRedirectUri: 'https://pedidos360-fel.vercel.app',
-  forzarAdminTemporal: true,
 };

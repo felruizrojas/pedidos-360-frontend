@@ -6,6 +6,4 @@ export const environment = {
   apiBaseUrl: 'http://localhost:8080',
   redirectUri: 'http://localhost:4200/auth-redirect',
   postLogoutRedirectUri: 'http://localhost:4200',
-  // TEMPORAL: mientras no existan App roles en Azure, todo usuario logueado se trata como Admin.
-  forzarAdminTemporal: true,
 };

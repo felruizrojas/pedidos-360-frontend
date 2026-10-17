@@ -27,7 +27,11 @@ export class AuthState {
 
   readonly estaLogueado = computed(() => this.cuentaActiva() !== null);
   readonly nombre = computed(() => getNombre(this.cuentaActiva()));
-  readonly roles = computed(() => getUserRoles(this.cuentaActiva()));
+  // Los roles vienen del access token de la API (ver user-roles.ts), que se obtiene de forma
+  // asíncrona; por eso son un signal propio y no un computed de la cuenta.
+  private readonly rolesCuenta = signal<string[]>([]);
+  readonly roles = this.rolesCuenta.asReadonly();
+  private rolesPendientes: Promise<string[]> = Promise.resolve([]);
 
   constructor() {
     if (!isPlatformBrowser(this.platformId)) {
@@ -50,8 +54,23 @@ export class AuthState {
     inject(DestroyRef).onDestroy(() => window.removeEventListener('storage', onStorage));
   }
 
-  /** Relee la cuenta activa desde MSAL (que a su vez lee de localStorage) y actualiza el signal. */
+  /** Relee la cuenta activa desde MSAL (que a su vez lee de localStorage) y actualiza los signals. */
   refrescar(): void {
-    this.cuentaActiva.set(this.msalService.instance.getActiveAccount());
+    const cuenta = this.msalService.instance.getActiveAccount();
+    this.cuentaActiva.set(cuenta);
+
+    const pendientes = getUserRoles(this.msalService.instance, cuenta);
+    this.rolesPendientes = pendientes;
+    pendientes.then((roles) => {
+      // Si mientras tanto hubo otro refrescar (p. ej. logout en otra pestaña), se descarta.
+      if (this.rolesPendientes === pendientes) {
+        this.rolesCuenta.set(roles);
+      }
+    });
+  }
+
+  /** Roles de la cuenta activa, esperando a que termine de cargarlos si aún no llegan. */
+  cargarRoles(): Promise<string[]> {
+    return this.rolesPendientes;
   }
 }

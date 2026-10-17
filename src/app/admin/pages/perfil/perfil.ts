@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MsalService } from '@azure/msal-angular';
-import { getUserRoles } from '../../../core/utils/user-roles';
+import { AuthState } from '../../../core/services/auth-state';
 import { getApellido, getNombre } from '../../../core/utils/user-profile';
 
 @Component({
@@ -28,7 +28,7 @@ import { getApellido, getNombre } from '../../../core/utils/user-profile';
             <div class="py-3 flex justify-between gap-4">
               <dt class="text-gray-600">Roles</dt>
               <dd class="flex flex-wrap justify-end gap-1.5">
-                @for (rol of roles; track rol) {
+                @for (rol of roles(); track rol) {
                   <span class="text-xs font-medium text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full">{{ rol }}</span>
                 } @empty {
                   <span class="text-gray-600">Sin roles asignados</span>
@@ -56,7 +56,7 @@ export class Perfil {
   protected readonly cuenta = this.msalService.instance.getActiveAccount();
   protected readonly nombre = getNombre(this.cuenta);
   protected readonly apellido = getApellido(this.cuenta);
-  protected readonly roles = getUserRoles(this.cuenta);
+  protected readonly roles = inject(AuthState).roles;
   protected readonly error = signal('');
 
   protected cerrarSesion(): void {

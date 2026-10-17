@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { NuevoProducto, Producto } from '../models/producto.model';
+import { ActualizacionProducto, NuevoProducto, Producto } from '../models/producto.model';
 
 @Injectable({
   providedIn: 'root'
@@ -21,5 +21,9 @@ export class CatalogoService {
 
   crearProducto(producto: NuevoProducto): Observable<Producto> {
     return this.http.post<Producto>(this.apiUrl, producto);
+  }
+
+  actualizarProducto(id: number, cambios: ActualizacionProducto): Observable<Producto> {
+    return this.http.put<Producto>(`${this.apiUrl}/${id}`, cambios);
   }
 }

@@ -108,17 +108,70 @@
               <th scope="col" class="px-4 py-3 font-semibold">Descripción</th>
               <th scope="col" class="px-4 py-3 font-semibold text-right">Precio</th>
               <th scope="col" class="px-4 py-3 font-semibold text-right">Stock</th>
+              <th scope="col" class="px-4 py-3 font-semibold text-right">Acciones</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 text-gray-800">
             @for (p of productosPagina(); track p.id) {
-              <tr>
-                <td class="px-4 py-3">{{ p.id }}</td>
-                <td class="px-4 py-3 font-medium">{{ p.nombre }}</td>
-                <td class="px-4 py-3 max-w-xs break-words">{{ p.descripcion }}</td>
-                <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
-                <td class="px-4 py-3 text-right">{{ p.stock }}</td>
-              </tr>
+              @if (editandoId() === p.id) {
+                <tr [formGroup]="formEdicion" class="bg-indigo-50/40 align-top"
+                  (keydown.escape)="cancelarEdicion()">
+                  <td class="px-4 py-3">{{ p.id }}</td>
+                  <td class="px-4 py-3 font-medium">{{ p.nombre }}</td>
+                  <td class="px-4 py-3 max-w-xs break-words">{{ p.descripcion }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <input [id]="'precio-' + p.id" type="number" step="1" min="1" [attr.max]="PRECIO_MAX"
+                      formControlName="precio" required (keydown.enter)="guardarEdicion(p)"
+                      [attr.aria-label]="'Precio de ' + p.nombre"
+                      [attr.aria-invalid]="!!errorPrecioEdicion || !!erroresEdicion()['precio']"
+                      [attr.aria-describedby]="'err-precio-' + p.id"
+                      class="w-32 rounded-lg border border-gray-300 px-2 py-1 text-right focus-visible:outline-2 focus-visible:outline-indigo-600" />
+                    @if (errorPrecioEdicion ?? erroresEdicion()['precio']; as mensaje) {
+                      <p [id]="'err-precio-' + p.id" role="alert" class="mt-1 text-xs text-red-700 text-left">{{ mensaje }}</p>
+                    }
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <input [id]="'stock-' + p.id" type="number" step="1" min="0" [attr.max]="STOCK_MAX"
+                      formControlName="stock" required (keydown.enter)="guardarEdicion(p)"
+                      [attr.aria-label]="'Stock de ' + p.nombre"
+                      [attr.aria-invalid]="!!errorStockEdicion || !!erroresEdicion()['stock']"
+                      [attr.aria-describedby]="'err-stock-' + p.id"
+                      class="w-24 rounded-lg border border-gray-300 px-2 py-1 text-right focus-visible:outline-2 focus-visible:outline-indigo-600" />
+                    @if (errorStockEdicion ?? erroresEdicion()['stock']; as mensaje) {
+                      <p [id]="'err-stock-' + p.id" role="alert" class="mt-1 text-xs text-red-700 text-left">{{ mensaje }}</p>
+                    }
+                  </td>
+                  <td class="px-4 py-3 text-right whitespace-nowrap">
+                    <button type="button" (click)="guardarEdicion(p)" [disabled]="guardandoEdicion()"
+                      class="bg-indigo-600 text-white px-3 py-1 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-60 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                      {{ guardandoEdicion() ? 'Guardando…' : 'Guardar' }}
+                    </button>
+                    <button type="button" (click)="cancelarEdicion()" [disabled]="guardandoEdicion()"
+                      class="ml-2 text-gray-700 px-3 py-1 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 disabled:opacity-60 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                      Cancelar
+                    </button>
+                    @if (errorEdicion()) {
+                      <p role="alert" class="mt-2 text-xs text-red-700 text-left whitespace-normal">{{ errorEdicion() }}</p>
+                    }
+                  </td>
+                </tr>
+              } @else {
+                <tr>
+                  <td class="px-4 py-3">{{ p.id }}</td>
+                  <td class="px-4 py-3 font-medium">{{ p.nombre }}</td>
+                  <td class="px-4 py-3 max-w-xs break-words">{{ p.descripcion }}</td>
+                  <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
+                  <td class="px-4 py-3 text-right">{{ p.stock }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <!-- Todo /dashboard ya exige Admin u Operador (authGuard), así que quien ve esto puede editar. -->
+                    <button type="button" [id]="'editar-' + p.id" (click)="editar(p)"
+                      [attr.aria-label]="'Editar precio y stock de ' + p.nombre"
+                      class="text-indigo-700 font-medium px-3 py-1 rounded-lg hover:bg-indigo-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>

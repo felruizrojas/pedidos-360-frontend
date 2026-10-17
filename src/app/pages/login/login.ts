@@ -1,7 +1,6 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { MsalService } from '@azure/msal-angular';
 import { AccountInfo } from '@azure/msal-browser';
-import { getUserRoles } from '../../core/utils/user-roles';
 import { getApellido, getNombre } from '../../core/utils/user-profile';
 import { AuthState } from '../../core/services/auth-state';
 import { environment } from '../../../environments/environment';
@@ -18,11 +17,11 @@ export class Login implements OnInit {
   private isInitialized = false;
 
   readonly account = signal<AccountInfo | null>(null);
-  readonly roles = computed(() => getUserRoles(this.account()));
   readonly nombre = computed(() => getNombre(this.account()));
   readonly apellido = computed(() => getApellido(this.account()));
 
   private readonly authState = inject(AuthState);
+  readonly roles = this.authState.roles;
 
   constructor(private authService: MsalService) {}
 
