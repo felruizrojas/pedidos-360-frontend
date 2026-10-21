@@ -1,116 +1,125 @@
-<main class="min-h-[calc(100vh-4rem)] bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4 py-10">
-  <div class="max-w-6xl mx-auto space-y-6">
+<!-- En /dashboard el layout de administración ya trae <main> y fondo: aquí solo va el contenido. -->
+@if (enDashboard) {
+  <div class="max-w-6xl space-y-6">
+    <ng-container [ngTemplateOutlet]="contenido" />
+  </div>
+} @else {
+  <main class="min-h-[calc(100vh-4rem)] bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4 py-10">
+    <div class="max-w-6xl mx-auto space-y-6">
+      <ng-container [ngTemplateOutlet]="contenido" />
+    </div>
+  </main>
+}
 
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">{{ titulo() }}</h1>
-      @if (puedeCrear()) {
-        <a routerLink="/pedidos/nuevo"
-          class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-          Nuevo pedido
-        </a>
+<ng-template #contenido>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">{{ titulo() }}</h1>
+    @if (puedeCrear() && !enDashboard) {
+      <a routerLink="/pedidos/nuevo"
+        class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+        Nuevo pedido
+      </a>
+    }
+  </div>
+
+  <form [formGroup]="filtrosForm" (ngSubmit)="aplicarFiltros()"
+    class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 grid gap-3 sm:grid-cols-4 items-end"
+    aria-label="Filtros de pedidos">
+    <div>
+      <label for="filtro-estado" class="block text-sm font-medium text-gray-700">Estado</label>
+      <select id="filtro-estado" formControlName="estado"
+        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 bg-white focus-visible:outline-2 focus-visible:outline-indigo-600">
+        <option value="">Todos</option>
+        @for (e of ESTADOS; track e) {
+          <option [value]="e">{{ ETIQUETA_ESTADO[e] }}</option>
+        }
+      </select>
+    </div>
+    <div>
+      <label for="filtro-desde" class="block text-sm font-medium text-gray-700">Desde</label>
+      <input id="filtro-desde" type="date" formControlName="desde"
+        [attr.aria-invalid]="!!errorFiltros()" aria-describedby="err-filtros"
+        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+    </div>
+    <div>
+      <label for="filtro-hasta" class="block text-sm font-medium text-gray-700">Hasta</label>
+      <input id="filtro-hasta" type="date" formControlName="hasta"
+        [attr.aria-invalid]="!!errorFiltros()" aria-describedby="err-filtros"
+        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+    </div>
+    <div class="flex gap-2">
+      <button type="submit"
+        class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+        Filtrar
+      </button>
+      <button type="button" (click)="limpiarFiltros()"
+        class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">
+        Limpiar
+      </button>
+    </div>
+    @if (errorFiltros()) {
+      <p id="err-filtros" role="alert" class="sm:col-span-4 text-sm text-red-700">{{ errorFiltros() }}</p>
+    }
+  </form>
+
+  @if (cargando()) {
+    <p class="text-center text-gray-600" role="status">Cargando pedidos…</p>
+  } @else if (error()) {
+    <div role="alert" class="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 flex flex-wrap items-center justify-center gap-3">
+      <span>{{ mensajeError() }}</span>
+      @if (error()!.status === 0 || error()!.status >= 500) {
+        <button type="button" (click)="cargar()" class="font-semibold underline cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">Reintentar</button>
       }
     </div>
-
-    <form [formGroup]="filtrosForm" (ngSubmit)="aplicarFiltros()"
-      class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 grid gap-3 sm:grid-cols-4 items-end"
-      aria-label="Filtros de pedidos">
-      <div>
-        <label for="filtro-estado" class="block text-sm font-medium text-gray-700">Estado</label>
-        <select id="filtro-estado" formControlName="estado"
-          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 bg-white focus-visible:outline-2 focus-visible:outline-indigo-600">
-          <option value="">Todos</option>
-          @for (e of ESTADOS; track e) {
-            <option [value]="e">{{ ETIQUETA_ESTADO[e] }}</option>
-          }
-        </select>
-      </div>
-      <div>
-        <label for="filtro-desde" class="block text-sm font-medium text-gray-700">Desde</label>
-        <input id="filtro-desde" type="date" formControlName="desde"
-          [attr.aria-invalid]="!!errorFiltros()" aria-describedby="err-filtros"
-          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
-      </div>
-      <div>
-        <label for="filtro-hasta" class="block text-sm font-medium text-gray-700">Hasta</label>
-        <input id="filtro-hasta" type="date" formControlName="hasta"
-          [attr.aria-invalid]="!!errorFiltros()" aria-describedby="err-filtros"
-          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
-      </div>
-      <div class="flex gap-2">
-        <button type="submit"
-          class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-          Filtrar
-        </button>
-        <button type="button" (click)="limpiarFiltros()"
-          class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">
-          Limpiar
-        </button>
-      </div>
-      @if (errorFiltros()) {
-        <p id="err-filtros" role="alert" class="sm:col-span-4 text-sm text-red-700">{{ errorFiltros() }}</p>
-      }
-    </form>
-
-    @if (cargando()) {
-      <p class="text-center text-gray-600" role="status">Cargando pedidos…</p>
-    } @else if (error()) {
-      <div role="alert" class="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 flex flex-wrap items-center justify-center gap-3">
-        <span>{{ mensajeError() }}</span>
-        @if (error()!.status === 0 || error()!.status >= 500) {
-          <button type="button" (click)="cargar()" class="font-semibold underline cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">Reintentar</button>
-        }
-      </div>
-    } @else if (resultado(); as res) {
-      @if (res.contenido.length === 0) {
-        <p class="text-center text-gray-600">
-          @if (estado() || desde() || hasta()) { No hay pedidos que coincidan con los filtros. }
-          @else if (soloCliente()) { Aún no tienes pedidos. }
-          @else { Aún no hay pedidos. }
-        </p>
-      } @else {
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-          <table class="w-full text-sm">
-            <caption class="sr-only">{{ titulo() }}: {{ res.totalElementos }} en total</caption>
-            <thead class="bg-gray-50 text-left text-gray-700">
-              <tr>
-                <th scope="col" class="px-4 py-3 font-semibold">N°</th>
-                <th scope="col" class="px-4 py-3 font-semibold">Fecha</th>
-                @if (!soloCliente()) {
-                  <th scope="col" class="px-4 py-3 font-semibold">Cliente</th>
-                }
-                <th scope="col" class="px-4 py-3 font-semibold">Estado</th>
-                <th scope="col" class="px-4 py-3 font-semibold text-right">Total</th>
-                <th scope="col" class="px-4 py-3"><span class="sr-only">Acciones</span></th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              @for (p of res.contenido; track p.id) {
-                <tr class="hover:bg-gray-50">
-                  <td class="px-4 py-3 font-semibold text-gray-900">#{{ p.id }}</td>
-                  <td class="px-4 py-3 text-gray-700 whitespace-nowrap">{{ p.creadoEn | date: 'dd-MM-yyyy HH:mm' }}</td>
-                  @if (!soloCliente()) {
-                    <td class="px-4 py-3 text-gray-700">{{ p.clienteNombre }}</td>
-                  }
-                  <td class="px-4 py-3"><app-estado-pedido-badge [estado]="p.estado" /></td>
-                  <td class="px-4 py-3 text-right font-semibold text-gray-900 whitespace-nowrap">
-                    {{ p.total | currency: 'CLP' : 'symbol-narrow' : '1.0-0' }}
-                  </td>
-                  <td class="px-4 py-3 text-right">
-                    <a [routerLink]="['/pedidos', p.id]" [attr.aria-label]="'Ver detalle del pedido ' + p.id"
-                      class="font-medium text-indigo-700 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-600">
-                      Ver detalle
-                    </a>
-                  </td>
-                </tr>
+  } @else if (resultado(); as res) {
+    @if (res.contenido.length === 0) {
+      <p class="text-center text-gray-600">
+        @if (estado() || desde() || hasta()) { No hay pedidos que coincidan con los filtros. }
+        @else if (soloCliente()) { Aún no tienes pedidos. }
+        @else { Aún no hay pedidos. }
+      </p>
+    } @else {
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+        <table class="w-full text-sm">
+          <caption class="sr-only">{{ titulo() }}: {{ res.totalElementos }} en total</caption>
+          <thead class="bg-gray-50 text-left text-gray-700">
+            <tr>
+              <th scope="col" class="px-4 py-3 font-semibold">N°</th>
+              <th scope="col" class="px-4 py-3 font-semibold">Fecha</th>
+              @if (!soloCliente()) {
+                <th scope="col" class="px-4 py-3 font-semibold">Cliente</th>
               }
-            </tbody>
-          </table>
-        </div>
+              <th scope="col" class="px-4 py-3 font-semibold">Estado</th>
+              <th scope="col" class="px-4 py-3 font-semibold text-right">Total</th>
+              <th scope="col" class="px-4 py-3"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (p of res.contenido; track p.id) {
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-semibold text-gray-900">#{{ p.id }}</td>
+                <td class="px-4 py-3 text-gray-700 whitespace-nowrap">{{ p.creadoEn | date: 'dd-MM-yyyy HH:mm' }}</td>
+                @if (!soloCliente()) {
+                  <td class="px-4 py-3 text-gray-700">{{ p.clienteNombre }}</td>
+                }
+                <td class="px-4 py-3"><app-estado-pedido-badge [estado]="p.estado" /></td>
+                <td class="px-4 py-3 text-right font-semibold text-gray-900 whitespace-nowrap">
+                  {{ p.total | currency: 'CLP' : 'symbol-narrow' : '1.0-0' }}
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <a [routerLink]="[basePedidos, p.id]" [attr.aria-label]="'Ver detalle del pedido ' + p.id"
+                    class="font-medium text-indigo-700 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-600">
+                    Ver detalle
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
-        <app-pagination [paginaActual]="pagina()" [totalItems]="res.totalElementos" [tamanoPagina]="tamanoPagina"
-          (paginaCambiada)="cambiarPagina($event)" />
-      }
+      <app-pagination [paginaActual]="pagina()" [totalItems]="res.totalElementos" [tamanoPagina]="tamanoPagina"
+        (paginaCambiada)="cambiarPagina($event)" />
     }
-
-  </div>
-</main>
+  }
+</ng-template>

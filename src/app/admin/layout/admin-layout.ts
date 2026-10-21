@@ -27,6 +27,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
                 Catálogo
               </a>
             </li>
+            <li>
+              <a routerLink="/dashboard/pedidos" routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
+                ariaCurrentWhenActive="page"
+                class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
+                Pedidos
+              </a>
+            </li>
           </ul>
         </div>
 

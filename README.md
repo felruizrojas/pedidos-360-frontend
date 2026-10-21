@@ -11,8 +11,8 @@ Login con **Microsoft Entra ID** (OIDC Authorization Code + PKCE) y consumo del 
 | OIDC Authorization Code + PKCE | `PublicClientApplication` + `loginRedirect` (MSAL genera `code_verifier`/`code_challenge`); sin flujo implícito |
 | Login / logout | `pages/login` (`loginRedirect` / `logoutRedirect`), `auth-redirect` como redirect URI, sesión en `localStorage` |
 | JWT en llamadas al backend | `MsalInterceptor`: `protectedResourceMap` `${apiBaseUrl}/api/*` → `api://…/access_as_user` (Bearer automático, renovación silenciosa) |
-| Guards y roles | `authGuard`: `/catalogo` exige sesión; `/dashboard` exige rol `Admin`/`Operador`; `/pedidos` los 3 roles y `/pedidos/nuevo` Cliente/Operador (claim `roles` del access token de la API) |
-| Pedidos (CRUD vía BFF) | `/pedidos`, `/pedidos/nuevo` y `/pedidos/:id` sobre `/api/orders/*`: carrito, listado paginado con filtros, detalle con historial, cambios de estado según rol (`estados-pedido.ts`), edición en CREADO y borrado lógico (Admin). El backend es la autoridad: sus 409 se muestran tal cual |
+| Guards y roles | `authGuard`: `/catalogo` exige sesión; `/dashboard` exige rol `Admin`/`Operador`; `/pedidos` y `/pedidos/nuevo` solo Cliente (Admin/Operador gestionan en `/dashboard/pedidos`) (claim `roles` del access token de la API) |
+| Pedidos (CRUD vía BFF) | `/pedidos`, `/pedidos/nuevo`, `/pedidos/:id` (Cliente) y `/dashboard/pedidos`, `/dashboard/pedidos/:id` (Admin/Operador) sobre `/api/orders/*`: carrito, listado paginado con filtros, detalle con historial, cambios de estado según rol (`estados-pedido.ts`), edición en CREADO y borrado lógico (Admin). El backend es la autoridad: sus 409 se muestran tal cual |
 | Manejo de errores | `apiErrorInterceptor` normaliza 400/401/403/404/409/0/502/503 a `ApiError` (400/404/409 con el `mensaje` del back) y la UI los muestra (`role="alert"`) |
 | Consumo vía API Manager | `environment.ts` → `apiBaseUrl = https://u8thxu2opa.execute-api.us-east-1.amazonaws.com` |
 | Despliegue en la nube | Vercel (SPA estática, `vercel.json`): deploy automático al hacer push a `main` desde la integración de Vercel con GitHub |
@@ -28,18 +28,19 @@ Login con **Microsoft Entra ID** (OIDC Authorization Code + PKCE) y consumo del 
 |---|---|---|
 | `/inicio` | público | Landing |
 | `/login` | público | Iniciar / cerrar sesión |
-| `/catalogo` | sesión | Catálogo (GET `/api/catalog/products`), filtros y paginación. Cliente/Operador: "Agregar al pedido" con cantidad |
-| `/pedidos` | Admin / Operador / Cliente | Listado paginado (`GET /api/orders`) con filtros por estado y fechas `desde`/`hasta`, badge de estado y total. El Cliente ve "Mis pedidos" (el back filtra los suyos) |
-| `/pedidos/nuevo` | Cliente / Operador | Revisa el carrito, pide la dirección y crea el pedido (`POST`); muestra los 400 por campo, vacía el carrito y va al detalle |
-| `/pedidos/:id` | Admin / Operador / Cliente | Detalle (ítems, total, dirección), timeline del historial (`/history`), botones de transición según rol y estado (`PUT /status`, motivo obligatorio al cancelar), edición en CREADO (`PUT`) y eliminar (Admin, `DELETE`) |
+| `/catalogo` | sesión | Catálogo (GET `/api/catalog/products`), filtros y paginación. Cliente: "Agregar al pedido" con cantidad |
+| `/pedidos` | Cliente | "Mis pedidos": listado paginado (`GET /api/orders`, el back filtra los suyos) con filtros por estado y fechas `desde`/`hasta`, badge de estado y total |
+| `/pedidos/nuevo` | Cliente | Revisa el carrito, pide la dirección y crea el pedido (`POST`); muestra los 400 por campo, vacía el carrito y va al detalle |
+| `/pedidos/:id` | Cliente | Detalle (ítems, total, dirección), timeline del historial (`/history`), botones de transición según rol y estado (`PUT /status`, motivo obligatorio al cancelar), edición en CREADO (`PUT`) y eliminar (Admin, `DELETE`) |
 | `/dashboard` | Admin / Operador | Bienvenida, perfil (claims del token) y alta de productos (POST) |
+| `/dashboard/pedidos` y `/dashboard/pedidos/:id` | Admin / Operador | Las mismas vistas de listado y detalle dentro del layout de administración: todos los pedidos, cambios de estado, edición en CREADO y eliminar (Admin) |
 
 ### Qué puede hacer cada rol en pedidos
 | | Cliente | Operador | Admin |
 |---|---|---|---|
-| Crear (carrito) | sí | sí | no (orders responde 403) |
-| Ver | solo los suyos | todos | todos |
-| Editar ítems y dirección | sus pedidos en CREADO | en CREADO | no |
+| Crear (carrito) | sí | no (orders responde 403) | no (orders responde 403) |
+| Ver | solo los suyos (`/pedidos`) | todos (`/dashboard/pedidos`) | todos (`/dashboard/pedidos`) |
+| Editar ítems y dirección | sus pedidos en CREADO | en CREADO | en CREADO |
 | Cambiar estado | solo cancelar en CREADO | toda transición válida | toda transición válida |
 | Eliminar (borrado lógico) | no | no | en CREADO o CANCELADO |
 

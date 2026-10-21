@@ -29,7 +29,7 @@ export class Catalogo implements OnInit {
   private readonly authState = inject(AuthState);
   protected readonly carrito = inject(CarritoService);
 
-  /** Cliente y Operador arman pedidos desde el catálogo; Admin solo mira. */
+  /** Solo el Cliente arma pedidos desde el catálogo; Admin y Operador solo miran. */
   protected readonly puedePedir = computed(() => puedeCrearPedidos(this.authState.roles()));
   /** Último producto agregado, para el aviso accesible "Se agregó …". */
   protected readonly ultimoAgregado = signal('');

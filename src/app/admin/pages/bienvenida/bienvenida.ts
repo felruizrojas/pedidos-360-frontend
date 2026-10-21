@@ -21,6 +21,12 @@ import { getNombre } from '../../../core/utils/user-profile';
         <h2 class="text-lg font-bold text-gray-900">Catálogo</h2>
         <p class="text-sm text-gray-600">Consulta los productos y agrega nuevos.</p>
       </a>
+
+      <a routerLink="/dashboard/pedidos"
+        class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow focus-visible:outline-2 focus-visible:outline-indigo-600">
+        <h2 class="text-lg font-bold text-gray-900">Pedidos</h2>
+        <p class="text-sm text-gray-600">Revisa los pedidos, cambia su estado y edítalos.</p>
+      </a>
     </div>
   `,
 })

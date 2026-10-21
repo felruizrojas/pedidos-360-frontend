@@ -12,6 +12,19 @@ export const adminRoutes: Routes = [
     children: [
       { path: '', component: Bienvenida, title: 'Dashboard' },
       { path: 'catalogo', component: CatalogoAdmin, title: 'Administrar catálogo' },
+      // Mismas vistas que /pedidos; data.dashboard ajusta los enlaces y el contenedor al layout de administración.
+      {
+        path: 'pedidos',
+        loadComponent: () => import('../pages/pedidos/lista-pedidos/lista-pedidos').then((m) => m.ListaPedidos),
+        title: 'Administrar pedidos',
+        data: { dashboard: true },
+      },
+      {
+        path: 'pedidos/:id',
+        loadComponent: () => import('../pages/pedidos/detalle-pedido/detalle-pedido').then((m) => m.DetallePedido),
+        title: 'Detalle del pedido',
+        data: { dashboard: true },
+      },
       { path: 'perfil', component: Perfil, title: 'Mi perfil' },
     ],
   },

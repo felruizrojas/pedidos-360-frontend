@@ -77,6 +77,13 @@ describe('DetallePedido', () => {
     expect(botones()).toEqual(['Eliminar pedido']);
   });
 
+  it('Admin en CREADO: aceptar, cancelar, editar y eliminar', async () => {
+    await montar(['Admin'], pedidoEjemplo());
+    expect(botones()).toEqual(
+      expect.arrayContaining(['Aceptar pedido', 'Cancelar pedido', 'Editar pedido', 'Eliminar pedido']),
+    );
+  });
+
   it('muestra el 409 de orders en un role="alert"', async () => {
     await montar(['Operador'], pedidoEjemplo());
     boton('Aceptar pedido').click();

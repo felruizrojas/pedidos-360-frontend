@@ -20,13 +20,13 @@ export const routes: Routes = [
   // 🔄 2. Nueva ruta pública exclusiva para capturar las respuestas del popup de Azure
   { path: 'auth-redirect', component: AuthRedirect },
 
-  // 🔒 Pedidos: fuera de /dashboard (que es solo Admin/Operador) para que el Cliente también entre.
+  // 🔒 Pedidos del Cliente ("mis pedidos"). Admin y Operador los gestionan en /dashboard/pedidos.
   // "nuevo" va antes de ":id". Carga diferida (como /dashboard). Lo que cada rol puede hacer dentro del
   // pedido lo decide orders.
   {
     path: 'pedidos',
     canActivate: [authGuard],
-    data: { roles: ['Admin', 'Operador', 'Cliente'] },
+    data: { roles: ['Cliente'] },
     children: [
       {
         path: '',
@@ -37,8 +37,6 @@ export const routes: Routes = [
         path: 'nuevo',
         loadComponent: () => import('./pages/pedidos/nuevo-pedido/nuevo-pedido').then((m) => m.NuevoPedido),
         title: 'Nuevo pedido',
-        canActivate: [authGuard],
-        data: { roles: ['Cliente', 'Operador'] },
       },
       {
         path: ':id',

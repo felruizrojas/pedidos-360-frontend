@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -29,12 +29,12 @@ import { ItemEditable, ItemsPedidoEditor } from '../../../shared/components/item
 import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
 
 /**
- * /pedidos/:id: detalle, historial, transiciones según rol y estado, edición en CREADO y borrado (Admin).
+ * /pedidos/:id y /dashboard/pedidos/:id: detalle, historial, transiciones según rol y estado, edición en CREADO y borrado (Admin).
  * Los botones son una ayuda: orders es la autoridad y, si responde 409/403, se muestra su mensaje.
  */
 @Component({
   selector: 'app-detalle-pedido',
-  imports: [CurrencyPipe, DatePipe, RouterLink, ReactiveFormsModule, EstadoPedidoBadge, ItemsPedidoEditor],
+  imports: [CurrencyPipe, DatePipe, NgTemplateOutlet, RouterLink, ReactiveFormsModule, EstadoPedidoBadge, ItemsPedidoEditor],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './detalle-pedido.html',
 })
@@ -51,6 +51,10 @@ export class DetallePedido implements OnInit {
   protected readonly ACCION_ESTADO = ACCION_ESTADO;
   protected readonly DIRECCION_MAX_LENGTH = DIRECCION_MAX_LENGTH;
   protected readonly COMENTARIO_MAX_LENGTH = COMENTARIO_MAX_LENGTH;
+
+  /** data.dashboard de la ruta: dentro del layout de administración (ver admin.routes.ts). */
+  protected readonly enDashboard = this.route.snapshot?.data['dashboard'] === true;
+  protected readonly basePedidos = this.enDashboard ? '/dashboard/pedidos' : '/pedidos';
 
   private id = 0;
   protected readonly pedido = signal<Pedido | null>(null);
@@ -317,7 +321,7 @@ export class DetallePedido implements OnInit {
     this.pedidosService.eliminarPedido(this.id).subscribe({
       next: () => {
         this.eliminando.set(false);
-        void this.router.navigate(['/pedidos']);
+        void this.router.navigate([this.basePedidos]);
       },
       error: (e: unknown) => {
         this.eliminando.set(false);

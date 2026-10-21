@@ -80,14 +80,14 @@ export function puedeTransicionar(desde: EstadoPedido, hacia: EstadoPedido, role
   return transicionesPermitidas(desde, roles).includes(hacia);
 }
 
-/** Crear pedidos: Cliente y Operador (orders rechaza a un Admin con 403). */
+/** Crear pedidos: solo Cliente, porque el pedido queda a nombre de su cuenta (orders responde 403 al resto). */
 export function puedeCrearPedidos(roles: readonly string[]): boolean {
-  return roles.includes('Cliente') || roles.includes('Operador');
+  return roles.includes('Cliente');
 }
 
-/** Editar ítems y dirección: solo en CREADO, Cliente (sus pedidos) u Operador. */
+/** Editar ítems y dirección: solo en CREADO; Cliente (sus pedidos), Admin u Operador (cualquiera). */
 export function puedeEditar(estado: EstadoPedido, roles: readonly string[]): boolean {
-  return estado === 'CREADO' && puedeCrearPedidos(roles);
+  return estado === 'CREADO' && (roles.includes('Cliente') || esStaff(roles));
 }
 
 /** Borrado lógico: solo Admin y solo en CREADO o CANCELADO. */

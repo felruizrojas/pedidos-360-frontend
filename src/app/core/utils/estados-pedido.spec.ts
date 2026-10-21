@@ -64,13 +64,13 @@ describe('estados-pedido', () => {
     expect(esSoloCliente(CLIENTE)).toBe(true);
   });
 
-  it('crear y editar: Cliente y Operador; editar solo en CREADO', () => {
+  it('crear: solo Cliente; editar: Cliente, Operador y Admin, solo en CREADO', () => {
     expect(puedeCrearPedidos(CLIENTE)).toBe(true);
-    expect(puedeCrearPedidos(OPERADOR)).toBe(true);
+    expect(puedeCrearPedidos(OPERADOR)).toBe(false);
     expect(puedeCrearPedidos(ADMIN)).toBe(false);
     expect(puedeEditar('CREADO', CLIENTE)).toBe(true);
     expect(puedeEditar('CREADO', OPERADOR)).toBe(true);
-    expect(puedeEditar('CREADO', ADMIN)).toBe(false);
+    expect(puedeEditar('CREADO', ADMIN)).toBe(true);
     expect(puedeEditar('ACEPTADO', CLIENTE)).toBe(false);
     expect(puedeEditar('ACEPTADO', OPERADOR)).toBe(false);
   });

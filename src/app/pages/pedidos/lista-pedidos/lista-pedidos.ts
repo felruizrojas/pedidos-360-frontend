@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -14,10 +14,13 @@ import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
 
 const PEDIDOS_POR_PAGINA = 10;
 
-/** /pedidos: listado paginado en el servidor (un Cliente solo recibe los suyos: lo filtra orders). */
+/**
+ * /pedidos (Cliente) y /dashboard/pedidos (Admin/Operador): listado paginado en el servidor.
+ * Un Cliente solo recibe los suyos: lo filtra orders.
+ */
 @Component({
   selector: 'app-lista-pedidos',
-  imports: [CurrencyPipe, DatePipe, ReactiveFormsModule, RouterLink, EstadoPedidoBadge, Pagination],
+  imports: [CurrencyPipe, DatePipe, NgTemplateOutlet, ReactiveFormsModule, RouterLink, EstadoPedidoBadge, Pagination],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './lista-pedidos.html',
 })
@@ -31,6 +34,10 @@ export class ListaPedidos implements OnInit {
   protected readonly ESTADOS = ESTADOS_PEDIDO;
   protected readonly ETIQUETA_ESTADO = ETIQUETA_ESTADO;
   protected readonly tamanoPagina = PEDIDOS_POR_PAGINA;
+
+  /** data.dashboard de la ruta: dentro del layout de administración (ver admin.routes.ts). */
+  protected readonly enDashboard = this.route.snapshot?.data['dashboard'] === true;
+  protected readonly basePedidos = this.enDashboard ? '/dashboard/pedidos' : '/pedidos';
 
   protected readonly soloCliente = computed(() => esSoloCliente(this.authState.roles()));
   protected readonly puedeCrear = computed(() => puedeCrearPedidos(this.authState.roles()));

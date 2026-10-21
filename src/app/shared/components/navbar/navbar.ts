@@ -17,7 +17,8 @@ export class Navbar {
   // sin depender de que el usuario navegue o interactúe en esta para refrescar.
   private readonly authState = inject(AuthState);
   private readonly allowedDashboardRoles = ['Admin', 'Operador'];
-  private readonly allowedPedidosRoles = ['Admin', 'Operador', 'Cliente'];
+  // Admin y Operador ven los pedidos en /dashboard/pedidos; en la tienda, "Pedidos" es "mis pedidos" del Cliente.
+  private readonly allowedPedidosRoles = ['Cliente'];
   private readonly carrito = inject(CarritoService);
 
   isMenuOpen = false;
@@ -30,7 +31,7 @@ export class Navbar {
     this.authState.roles().some((role) => this.allowedPedidosRoles.includes(role)),
   );
 
-  /** El carrito solo aplica a quien puede crear pedidos (Cliente y Operador). */
+  /** El carrito solo aplica a quien puede crear pedidos (Cliente). */
   readonly canUseCarrito = computed(() => puedeCrearPedidos(this.authState.roles()));
   readonly cantidadCarrito = this.carrito.cantidadTotal;
 
