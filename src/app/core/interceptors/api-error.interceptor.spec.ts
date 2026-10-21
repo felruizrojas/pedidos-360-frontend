@@ -33,6 +33,27 @@ describe('apiErrorInterceptor', () => {
     expect(fallar(503).mensaje).toContain('no está disponible');
   });
 
+  it('409 usa el mensaje del back y conserva los detalles', () => {
+    const e = fallar(409, {
+      mensaje: 'No se puede despachar un pedido que no fue aceptado (estado actual: CREADO)',
+      detalles: { estadoActual: 'CREADO', estadoSolicitado: 'DESPACHADO' },
+    });
+    expect(e.status).toBe(409);
+    expect(e.mensaje).toBe('No se puede despachar un pedido que no fue aceptado (estado actual: CREADO)');
+    expect(e.detalles).toEqual({ estadoActual: 'CREADO', estadoSolicitado: 'DESPACHADO' });
+  });
+
+  it('404 usa el mensaje del back; sin mensaje, uno por defecto', () => {
+    expect(fallar(404, { mensaje: 'Pedido 99 no encontrado' }).mensaje).toBe('Pedido 99 no encontrado');
+    expect(fallar(404).mensaje).toBe('No se encontró lo que buscabas.');
+    expect(fallar(409).mensaje).toContain('conflicto');
+  });
+
+  it('503 no expone el mensaje del back', () => {
+    const e = fallar(503, { mensaje: 'Servicio de catálogo no disponible' });
+    expect(e.mensaje).toBe('El servicio no está disponible. Inténtalo de nuevo en unos minutos.');
+  });
+
   it('status 0 ante error de red', () => {
     let error!: ApiError;
     http.get('/x').subscribe({ error: (e) => (error = e) });

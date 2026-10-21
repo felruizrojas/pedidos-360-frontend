@@ -1,0 +1,72 @@
+<main class="min-h-[calc(100vh-4rem)] bg-linear-to-br from-indigo-50 via-white to-purple-50 px-4 py-10">
+  <div class="max-w-3xl mx-auto space-y-6">
+
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Nuevo pedido</h1>
+      <a routerLink="/catalogo" class="text-sm font-medium text-indigo-700 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-600">
+        Seguir agregando productos
+      </a>
+    </div>
+
+    @if (carrito.vacio()) {
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center space-y-3">
+        <p class="text-gray-700">Tu carrito está vacío.</p>
+        <a routerLink="/catalogo"
+          class="inline-block bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          Ir al catálogo
+        </a>
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="crear()" novalidate class="space-y-6">
+        <section aria-labelledby="titulo-productos" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-3">
+          <h2 id="titulo-productos" class="text-lg font-bold text-gray-900">Productos</h2>
+          <app-items-pedido-editor [items]="items()" [errores]="erroresCampo()"
+            (cantidadCambiada)="carrito.cambiarCantidad($event.productoId, $event.cantidad)"
+            (quitar)="carrito.quitar($event)" />
+          @if (erroresCampo()['items']) {
+            <p role="alert" class="text-sm text-red-700">{{ erroresCampo()['items'] }}</p>
+          }
+          <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+            <span class="font-bold text-gray-900">Total referencial</span>
+            <span class="text-xl font-extrabold text-gray-900">{{ carrito.totalReferencial() | currency: 'CLP' : 'symbol-narrow' : '1.0-0' }}</span>
+          </div>
+          <p class="text-xs text-gray-500">El precio final lo calcula el sistema con el catálogo vigente al crear el pedido.</p>
+        </section>
+
+        <section aria-labelledby="titulo-entrega" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-3">
+          <h2 id="titulo-entrega" class="text-lg font-bold text-gray-900">Entrega</h2>
+          <div>
+            <label for="direccionEntrega" class="block text-sm font-medium text-gray-700">Dirección de entrega *</label>
+            <input id="direccionEntrega" type="text" formControlName="direccionEntrega" [attr.maxlength]="DIRECCION_MAX_LENGTH"
+              required autocomplete="street-address" placeholder="Av. Providencia 1234, Santiago"
+              [attr.aria-invalid]="!!errorDireccion || !!erroresCampo()['direccionEntrega']"
+              aria-describedby="err-direccion err-direccion-srv"
+              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+            @if (errorDireccion; as mensaje) {
+              <p id="err-direccion" role="alert" class="mt-1 text-sm text-red-700">{{ mensaje }}</p>
+            }
+            @if (erroresCampo()['direccionEntrega']) {
+              <p id="err-direccion-srv" role="alert" class="mt-1 text-sm text-red-700">{{ erroresCampo()['direccionEntrega'] }}</p>
+            }
+          </div>
+        </section>
+
+        @if (errorEnvio()) {
+          <p role="alert" class="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700">{{ errorEnvio() }}</p>
+        }
+
+        <div class="flex flex-wrap gap-2 justify-end">
+          <button type="button" (click)="carrito.vaciar()" [disabled]="enviando()"
+            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">
+            Vaciar carrito
+          </button>
+          <button type="submit" [disabled]="enviando()"
+            class="px-5 py-2 rounded-lg bg-indigo-600 text-white font-semibold shadow-sm hover:bg-indigo-700 disabled:opacity-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            {{ enviando() ? 'Creando pedido…' : 'Confirmar pedido' }}
+          </button>
+        </div>
+      </form>
+    }
+
+  </div>
+</main>

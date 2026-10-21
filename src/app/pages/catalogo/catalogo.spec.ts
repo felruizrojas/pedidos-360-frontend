@@ -2,6 +2,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { MsalService } from '@azure/msal-angular';
 import { environment } from '../../../environments/environment';
 import { apiErrorInterceptor } from '../../core/interceptors/api-error.interceptor';
 import { Catalogo } from './catalogo';
@@ -14,7 +15,16 @@ describe('Catalogo', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Catalogo],
-      providers: [provideHttpClient(withInterceptors([apiErrorInterceptor])), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        // Sin sesión: AuthState queda sin roles y no se muestra "Agregar al pedido".
+        {
+          provide: MsalService,
+          useValue: { instance: { getActiveAccount: () => null, getAllAccounts: () => [], initialize: () => Promise.resolve() } },
+        },
+      ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(Catalogo);

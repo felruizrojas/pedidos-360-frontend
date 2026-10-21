@@ -15,6 +15,6 @@ export class Inicio implements AfterViewInit {
     // igual lo rechaza, se ignora; el video es solo decorativo.
     const video = this.heroVideo().nativeElement;
     video.muted = true;
-    video.play().catch(() => {});
+    video.play()?.catch(() => {}); // ?. : jsdom (tests) no implementa play() y devuelve undefined
   }
 }

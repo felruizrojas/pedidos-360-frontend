@@ -1,12 +1,15 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Pagination } from '../../shared/components/pagination/pagination';
 import { CatalogoFiltros } from '../../shared/components/catalogo-filtros/catalogo-filtros';
 import { ApiError, esApiError } from '../../core/models/api-error.model';
 import { Producto } from '../../core/models/producto.model';
 import { OrdenCatalogo } from '../../core/models/orden-catalogo.model';
+import { AuthState } from '../../core/services/auth-state';
+import { CANTIDAD_MAXIMA, CarritoService } from '../../core/services/carrito';
 import { CatalogoService } from '../../core/services/catalogo';
+import { puedeCrearPedidos } from '../../core/utils/estados-pedido';
 import { actualizarPaginaEnUrl, leerPaginaDeUrl } from '../../core/utils/pagina-url';
 import { filtrarYOrdenarProductos } from '../../core/utils/catalogo-filtro.util';
 
@@ -14,7 +17,7 @@ const PRODUCTOS_POR_PAGINA = 15;
 
 @Component({
   selector: 'app-catalogo',
-  imports: [DecimalPipe, Pagination, CatalogoFiltros],
+  imports: [DecimalPipe, RouterLink, Pagination, CatalogoFiltros],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './catalogo.html',
   styleUrl: './catalogo.css',
@@ -23,6 +26,13 @@ export class Catalogo implements OnInit {
   private readonly catalogoService = inject(CatalogoService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly authState = inject(AuthState);
+  protected readonly carrito = inject(CarritoService);
+
+  /** Cliente y Operador arman pedidos desde el catálogo; Admin solo mira. */
+  protected readonly puedePedir = computed(() => puedeCrearPedidos(this.authState.roles()));
+  /** Último producto agregado, para el aviso accesible "Se agregó …". */
+  protected readonly ultimoAgregado = signal('');
 
   protected readonly productos = signal<Producto[]>([]);
   /** El catálogo público solo muestra productos con stock disponible; sin stock, no se puede pedir. */
@@ -80,6 +90,23 @@ export class Catalogo implements OnInit {
         this.error.set(apiError);
       },
     });
+  }
+
+  /** Tope de cantidad por producto: el stock visible y el máximo por ítem que valida orders. */
+  protected maximoPedible(producto: Producto): number {
+    return Math.min(producto.stock, CANTIDAD_MAXIMA);
+  }
+
+  protected agregarAlPedido(producto: Producto, campo: HTMLInputElement): void {
+    const cantidad = campo.valueAsNumber;
+    const maximo = this.maximoPedible(producto);
+    if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > maximo) {
+      campo.value = String(Math.min(Math.max(Number.isFinite(cantidad) ? Math.trunc(cantidad) : 1, 1), maximo));
+      return;
+    }
+    this.carrito.agregar(producto, cantidad);
+    campo.value = '1';
+    this.ultimoAgregado.set(`Se agregó ${cantidad} × ${producto.nombre} al pedido.`);
   }
 
   protected cambiarPagina(pagina: number): void {

@@ -2,6 +2,13 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 import { ApiError } from '../models/api-error.model';
 
+/**
+ * Códigos cuyo `mensaje` del back es útil para el usuario y se muestra tal cual: validación (400),
+ * no encontrado (404) y conflicto de negocio (409: transición inválida, stock insuficiente, versión).
+ * El resto (401/403/5xx) usa un mensaje propio para no exponer detalles internos.
+ */
+const STATUS_CON_MENSAJE_DEL_BACK = [400, 404, 409];
+
 function mensajePorDefecto(status: number): string {
   switch (status) {
     case 400:
@@ -10,6 +17,10 @@ function mensajePorDefecto(status: number): string {
       return 'Tu sesión expiró. Inicia sesión nuevamente.';
     case 403:
       return 'No tienes permisos para realizar esta acción.';
+    case 404:
+      return 'No se encontró lo que buscabas.';
+    case 409:
+      return 'La operación no se pudo completar por un conflicto con el estado actual.';
     case 0:
     case 502:
     case 503:
@@ -35,7 +46,7 @@ export const apiErrorInterceptor: HttpInterceptorFn = (req, next) =>
       const apiError: ApiError = {
         status: error.status,
         mensaje:
-          error.status === 400 && typeof cuerpo?.mensaje === 'string'
+          STATUS_CON_MENSAJE_DEL_BACK.includes(error.status) && typeof cuerpo?.mensaje === 'string' && cuerpo.mensaje
             ? cuerpo.mensaje
             : mensajePorDefecto(error.status),
         detalles,

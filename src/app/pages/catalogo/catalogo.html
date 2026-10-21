@@ -9,7 +9,24 @@
         </span>
       </h1>
       <p class="text-gray-500">Productos disponibles en Pedidos 360.</p>
+      @if (puedePedir()) {
+        <p class="text-xs text-gray-500">Los precios son referenciales: el total final se calcula al crear el pedido.</p>
+      }
     </div>
+
+    @if (puedePedir() && !carrito.vacio()) {
+      <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-white border border-indigo-100 shadow-sm">
+        <p class="text-sm text-gray-800" role="status">
+          @if (ultimoAgregado()) { {{ ultimoAgregado() }} }
+          Tienes {{ carrito.cantidadTotal() }} {{ carrito.cantidadTotal() === 1 ? 'unidad' : 'unidades' }} en el pedido
+          (${{ carrito.totalReferencial() | number:'1.0-0' }} referencial).
+        </p>
+        <a routerLink="/pedidos/nuevo"
+          class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          Revisar pedido
+        </a>
+      </div>
+    }
 
     @if (cargando()) {
       <p class="text-center text-gray-600" role="status">Cargando productos…</p>
@@ -53,6 +70,21 @@
                   Stock: {{ item.stock }}
                 </span>
               </div>
+
+              @if (puedePedir()) {
+                <form (submit)="$event.preventDefault(); agregarAlPedido(item, cantidad)" class="flex items-end gap-2 pt-2">
+                  <label class="text-sm text-gray-700">
+                    <span class="block">Cantidad</span>
+                    <input #cantidad type="number" min="1" step="1" value="1" [attr.max]="maximoPedible(item)"
+                      [attr.aria-label]="'Cantidad de ' + item.nombre"
+                      class="mt-1 w-20 rounded-lg border border-gray-300 px-2 py-1 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+                  </label>
+                  <button type="submit" [attr.aria-label]="'Agregar ' + item.nombre + ' al pedido'"
+                    class="flex-1 bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    Agregar al pedido
+                  </button>
+                </form>
+              }
             </div>
           }
         </div>

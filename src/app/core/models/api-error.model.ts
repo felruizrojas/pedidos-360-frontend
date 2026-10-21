@@ -2,7 +2,7 @@
 export interface ApiError {
   status: number;
   mensaje: string;
-  /** Errores de validación 400 por campo: { campo: mensaje }. */
+  /** Errores de validación 400 por campo: { campo: mensaje }. En un 409, los datos del conflicto. */
   detalles?: Record<string, string>;
 }
 

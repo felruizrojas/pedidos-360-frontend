@@ -11,8 +11,9 @@ Login con **Microsoft Entra ID** (OIDC Authorization Code + PKCE) y consumo del 
 | OIDC Authorization Code + PKCE | `PublicClientApplication` + `loginRedirect` (MSAL genera `code_verifier`/`code_challenge`); sin flujo implícito |
 | Login / logout | `pages/login` (`loginRedirect` / `logoutRedirect`), `auth-redirect` como redirect URI, sesión en `localStorage` |
 | JWT en llamadas al backend | `MsalInterceptor`: `protectedResourceMap` `${apiBaseUrl}/api/*` → `api://…/access_as_user` (Bearer automático, renovación silenciosa) |
-| Guards y roles | `authGuard`: `/catalogo` exige sesión; `/dashboard` exige rol `Admin`/`Operador` (claim `roles` del ID token) |
-| Manejo de errores | `apiErrorInterceptor` normaliza 400/401/403/404/0/502/503 a `ApiError` y la UI los muestra (`role="alert"`) |
+| Guards y roles | `authGuard`: `/catalogo` exige sesión; `/dashboard` exige rol `Admin`/`Operador`; `/pedidos` los 3 roles y `/pedidos/nuevo` Cliente/Operador (claim `roles` del access token de la API) |
+| Pedidos (CRUD vía BFF) | `/pedidos`, `/pedidos/nuevo` y `/pedidos/:id` sobre `/api/orders/*`: carrito, listado paginado con filtros, detalle con historial, cambios de estado según rol (`estados-pedido.ts`), edición en CREADO y borrado lógico (Admin). El backend es la autoridad: sus 409 se muestran tal cual |
+| Manejo de errores | `apiErrorInterceptor` normaliza 400/401/403/404/409/0/502/503 a `ApiError` (400/404/409 con el `mensaje` del back) y la UI los muestra (`role="alert"`) |
 | Consumo vía API Manager | `environment.ts` → `apiBaseUrl = https://u8thxu2opa.execute-api.us-east-1.amazonaws.com` |
 | Despliegue en la nube | Vercel (SPA estática, `vercel.json`): deploy automático al hacer push a `main` desde la integración de Vercel con GitHub |
 
@@ -27,8 +28,24 @@ Login con **Microsoft Entra ID** (OIDC Authorization Code + PKCE) y consumo del 
 |---|---|---|
 | `/inicio` | público | Landing |
 | `/login` | público | Iniciar / cerrar sesión |
-| `/catalogo` | sesión | Catálogo (GET `/api/catalog/products`), filtros y paginación |
+| `/catalogo` | sesión | Catálogo (GET `/api/catalog/products`), filtros y paginación. Cliente/Operador: "Agregar al pedido" con cantidad |
+| `/pedidos` | Admin / Operador / Cliente | Listado paginado (`GET /api/orders`) con filtros por estado y fechas `desde`/`hasta`, badge de estado y total. El Cliente ve "Mis pedidos" (el back filtra los suyos) |
+| `/pedidos/nuevo` | Cliente / Operador | Revisa el carrito, pide la dirección y crea el pedido (`POST`); muestra los 400 por campo, vacía el carrito y va al detalle |
+| `/pedidos/:id` | Admin / Operador / Cliente | Detalle (ítems, total, dirección), timeline del historial (`/history`), botones de transición según rol y estado (`PUT /status`, motivo obligatorio al cancelar), edición en CREADO (`PUT`) y eliminar (Admin, `DELETE`) |
 | `/dashboard` | Admin / Operador | Bienvenida, perfil (claims del token) y alta de productos (POST) |
+
+### Qué puede hacer cada rol en pedidos
+| | Cliente | Operador | Admin |
+|---|---|---|---|
+| Crear (carrito) | sí | sí | no (orders responde 403) |
+| Ver | solo los suyos | todos | todos |
+| Editar ítems y dirección | sus pedidos en CREADO | en CREADO | no |
+| Cambiar estado | solo cancelar en CREADO | toda transición válida | toda transición válida |
+| Eliminar (borrado lógico) | no | no | en CREADO o CANCELADO |
+
+Transiciones: CREADO → ACEPTADO / CANCELADO · ACEPTADO → EN_PREPARACION / CANCELADO · EN_PREPARACION → DESPACHADO / CANCELADO · DESPACHADO → ENTREGADO. La UI solo muestra los botones válidos (`core/utils/estados-pedido.ts`), pero si orders igual rechaza (409 por transición inválida o stock insuficiente al aceptar, 403 por rol) se muestra su mensaje.
+
+El carrito (`core/services/carrito.ts`) vive en `localStorage` (`pedidos360.carrito`; si no está disponible funciona en memoria). Sus precios son referenciales: orders los recalcula con el catálogo al crear o editar el pedido.
 
 ## Entornos
 | | Local (`ng serve`) | Vercel (`ng build`) |
@@ -42,8 +59,8 @@ Login con **Microsoft Entra ID** (OIDC Authorization Code + PKCE) y consumo del 
 ## Ejecutar
 ```bash
 npm ci
-npm start                     # http://localhost:4200 (requiere BFF en :8080 y catálogo en :8081)
-npm test                      # Vitest
+npm start                     # http://localhost:4200 (requiere BFF en :8080, catálogo en :8081 y pedidos en :8082)
+npm test -- --watch=false     # Vitest (sin backend)
 npm run build                 # build producción en dist/pedidos-360-frontend/browser
 ```
 
@@ -56,6 +73,8 @@ npm run build                 # build producción en dist/pedidos-360-frontend/b
 
 ## Pruebas manuales
 **Navegador (flujo completo):** abrir la URL → Iniciar sesión → login en Entra ID → `/catalogo` carga productos. En DevTools → Network: la llamada a `/api/catalog/products` va al API Gateway con `Authorization: Bearer <JWT>` (el token se puede decodificar en jwt.ms: `aud`, `iss`, `scp=access_as_user`, `roles`).
+
+**Pedidos (por rol):** Cliente agrega productos en `/catalogo` → Carrito → dirección → "Confirmar pedido" (queda en CREADO). Operador abre `/pedidos/:id` → "Aceptar pedido" (baja el stock en `/catalogo`) → "Pasar a preparación" → "Despachar pedido" → "Marcar como entregado"; el historial muestra cada cambio. Para ver un **409**, en otra pestaña cambiar el estado del mismo pedido y luego intentar una transición desde la pestaña desactualizada (o aceptar con más cantidad que el stock): aparece el mensaje de orders en un aviso rojo.
 
 **curl** (el HTML estático responde sin sesión; los datos requieren token):
 ```bash
