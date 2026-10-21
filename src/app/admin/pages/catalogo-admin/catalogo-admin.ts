@@ -128,6 +128,12 @@ export class CatalogoAdmin implements OnInit {
     stock: [null as number | null, STOCK_VALIDATORS],
   });
 
+  // Eliminación (borrado lógico) con confirmación en línea. Solo una fila a la vez.
+  protected readonly eliminandoId = signal<number | null>(null);
+  protected readonly enviandoEliminacion = signal(false);
+  protected readonly errorEliminar = signal('');
+  protected readonly mensajeExito = signal('');
+
   /** Un solo mensaje claro por campo (el primero que aplique), en vez de apilar todos los errores. */
   protected get errorNombre(): string | null {
     const c = this.form.controls.nombre;
@@ -175,10 +181,7 @@ export class CatalogoAdmin implements OnInit {
         this.productos.set(productos);
         // Si la página pedida en la URL quedó fuera de rango (p. ej. un deep-link
         // viejo con más páginas de las que ahora hay productos), se ajusta a la última válida.
-        const totalPaginas = Math.max(1, Math.ceil(productos.length / PRODUCTOS_POR_PAGINA));
-        if (this.pagina() > totalPaginas) {
-          this.cambiarPagina(totalPaginas);
-        }
+        this.ajustarPagina(productos.length);
         this.cargando.set(false);
       },
       error: (e: unknown) => {
@@ -191,6 +194,14 @@ export class CatalogoAdmin implements OnInit {
         this.cargando.set(false);
       },
     });
+  }
+
+  /** Retrocede a la última página válida si la actual quedó fuera de rango. */
+  private ajustarPagina(totalItems: number): void {
+    const totalPaginas = Math.max(1, Math.ceil(totalItems / PRODUCTOS_POR_PAGINA));
+    if (this.pagina() > totalPaginas) {
+      this.cambiarPagina(totalPaginas);
+    }
   }
 
   protected cambiarPagina(pagina: number): void {
@@ -258,6 +269,7 @@ export class CatalogoAdmin implements OnInit {
   }
 
   protected editar(producto: Producto): void {
+    this.eliminandoId.set(null);
     this.editandoId.set(producto.id);
     this.formEdicion.reset({ precio: producto.precio, stock: producto.stock });
     this.errorEdicion.set('');
@@ -303,6 +315,54 @@ export class CatalogoAdmin implements OnInit {
         }
       },
     });
+  }
+
+  protected pedirEliminar(producto: Producto): void {
+    this.editandoId.set(null);
+    this.eliminandoId.set(producto.id);
+    this.errorEliminar.set('');
+    this.mensajeExito.set('');
+    this.enfocar(`cancelar-eliminar-${producto.id}`);
+  }
+
+  protected cancelarEliminar(): void {
+    if (this.enviandoEliminacion()) return;
+    const id = this.eliminandoId();
+    this.eliminandoId.set(null);
+    if (id !== null) this.enfocar(`eliminar-${id}`);
+  }
+
+  protected confirmarEliminar(producto: Producto): void {
+    if (this.enviandoEliminacion()) return;
+
+    this.enviandoEliminacion.set(true);
+    this.errorEliminar.set('');
+    this.catalogoService.eliminarProducto(producto.id).subscribe({
+      next: () => {
+        this.enviandoEliminacion.set(false);
+        this.quitarDeLaLista(producto.id);
+        this.mensajeExito.set('Producto eliminado');
+      },
+      error: (e: unknown) => {
+        const apiError: ApiError = esApiError(e) ? e : { status: 0, mensaje: '' };
+        this.enviandoEliminacion.set(false);
+        if (apiError.status === 404) {
+          // Otro usuario ya lo eliminó: se quita igual para no dejar una fila fantasma.
+          this.quitarDeLaLista(producto.id);
+          this.errorEliminar.set('El producto ya no existe. Recarga la lista.');
+        } else {
+          this.errorEliminar.set(mensajeErrorApi(apiError, 'eliminar'));
+        }
+      },
+    });
+  }
+
+  /** Quita la fila, ajusta la página si quedó vacía y deja el foco en el título (la fila ya no existe). */
+  private quitarDeLaLista(id: number): void {
+    this.eliminandoId.set(null);
+    this.productos.update((lista) => lista.filter((p) => p.id !== id));
+    this.ajustarPagina(this.resultado().length);
+    this.enfocar('titulo-catalogo');
   }
 
   /** Mueve el foco tras el próximo render (el elemento destino puede no existir todavía). */

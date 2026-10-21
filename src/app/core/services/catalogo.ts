@@ -26,4 +26,9 @@ export class CatalogoService {
   actualizarProducto(id: number, cambios: ActualizacionProducto): Observable<Producto> {
     return this.http.put<Producto>(`${this.apiUrl}/${id}`, cambios);
   }
+
+  /** Borrado lógico en el back: el producto deja de listarse y de poder pedirse. */
+  eliminarProducto(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }

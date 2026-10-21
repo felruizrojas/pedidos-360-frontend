@@ -58,4 +58,13 @@ describe('CatalogoService', () => {
     req.flush({ ...producto, ...cambios });
     expect(res).toEqual({ ...producto, ...cambios });
   });
+
+  it('elimina un producto con DELETE', () => {
+    let completado = false;
+    service.eliminarProducto(1).subscribe({ complete: () => (completado = true) });
+    const req = http.expectOne(`${url}/1`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    expect(completado).toBe(true);
+  });
 });
