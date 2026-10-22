@@ -1,6 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Injector, OnInit, afterNextRender, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, forkJoin, of } from 'rxjs';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import { CatalogoFiltros } from '../../../shared/components/catalogo-filtros/catalogo-filtros';
@@ -134,6 +135,10 @@ export class CatalogoAdmin implements OnInit {
   protected readonly errorEliminar = signal('');
   protected readonly mensajeExito = signal('');
 
+  // Deshacer la eliminación: la fila queda en la tabla marcada como eliminada, con el botón "Deshacer".
+  protected readonly restaurandoId = signal<number | null>(null);
+  protected readonly errorRestaurar = signal('');
+
   /** Un solo mensaje claro por campo (el primero que aplique), en vez de apilar todos los errores. */
   protected get errorNombre(): string | null {
     const c = this.form.controls.nombre;
@@ -176,8 +181,13 @@ export class CatalogoAdmin implements OnInit {
   protected cargar(): void {
     this.cargando.set(true);
     this.errorCarga.set('');
-    this.catalogoService.obtenerProductos().subscribe({
-      next: (productos) => {
+    // Los eliminados se muestran en la misma tabla para poder deshacer. Si esa lista falla, se ven los vigentes igual.
+    forkJoin({
+      vigentes: this.catalogoService.obtenerProductos(),
+      eliminados: this.catalogoService.obtenerEliminados().pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: ({ vigentes, eliminados }) => {
+        const productos = [...vigentes, ...eliminados.map((p) => ({ ...p, eliminado: true }))].sort((a, b) => a.id - b.id);
         this.productos.set(productos);
         // Si la página pedida en la URL quedó fuera de rango (p. ej. un deep-link
         // viejo con más páginas de las que ahora hay productos), se ajusta a la última válida.
@@ -321,6 +331,7 @@ export class CatalogoAdmin implements OnInit {
     this.editandoId.set(null);
     this.eliminandoId.set(producto.id);
     this.errorEliminar.set('');
+    this.errorRestaurar.set('');
     this.mensajeExito.set('');
     this.enfocar(`cancelar-eliminar-${producto.id}`);
   }
@@ -340,16 +351,18 @@ export class CatalogoAdmin implements OnInit {
     this.catalogoService.eliminarProducto(producto.id).subscribe({
       next: () => {
         this.enviandoEliminacion.set(false);
-        this.quitarDeLaLista(producto.id);
-        this.mensajeExito.set('Producto eliminado');
+        this.marcarEliminado(producto.id, true);
+        this.mensajeExito.set('Producto eliminado del catálogo. Puedes deshacerlo con "Deshacer".');
+        this.enfocar(`deshacer-${producto.id}`);
       },
       error: (e: unknown) => {
         const apiError: ApiError = esApiError(e) ? e : { status: 0, mensaje: '' };
         this.enviandoEliminacion.set(false);
         if (apiError.status === 404) {
-          // Otro usuario ya lo eliminó: se quita igual para no dejar una fila fantasma.
-          this.quitarDeLaLista(producto.id);
-          this.errorEliminar.set('El producto ya no existe. Recarga la lista.');
+          // Otro usuario ya lo eliminó (o ya no existe): se recarga para mostrar el estado real.
+          this.eliminandoId.set(null);
+          this.errorEliminar.set('El producto ya no estaba en el catálogo. Se actualizó la lista.');
+          this.cargar();
         } else {
           this.errorEliminar.set(mensajeErrorApi(apiError, 'eliminar'));
         }
@@ -357,12 +370,34 @@ export class CatalogoAdmin implements OnInit {
     });
   }
 
-  /** Quita la fila, ajusta la página si quedó vacía y deja el foco en el título (la fila ya no existe). */
-  private quitarDeLaLista(id: number): void {
+  protected deshacerEliminar(producto: Producto): void {
+    if (this.restaurandoId() !== null) return;
+
+    this.restaurandoId.set(producto.id);
+    this.errorRestaurar.set('');
+    this.errorEliminar.set('');
+    this.mensajeExito.set('');
+    this.catalogoService.restaurarProducto(producto.id).subscribe({
+      next: () => {
+        this.restaurandoId.set(null);
+        this.marcarEliminado(producto.id, false);
+        this.mensajeExito.set('Producto restaurado en el catálogo.');
+        this.enfocar(`eliminar-${producto.id}`);
+      },
+      error: (e: unknown) => {
+        const apiError: ApiError = esApiError(e) ? e : { status: 0, mensaje: '' };
+        this.restaurandoId.set(null);
+        this.errorRestaurar.set(
+          apiError.status === 404 ? 'El producto ya no existe. Recarga la lista.' : mensajeErrorApi(apiError, 'restaurar'),
+        );
+      },
+    });
+  }
+
+  /** La fila se queda en la tabla: solo cambia su estado (y con él, el botón Eliminar/Deshacer). */
+  private marcarEliminado(id: number, eliminado: boolean): void {
     this.eliminandoId.set(null);
-    this.productos.update((lista) => lista.filter((p) => p.id !== id));
-    this.ajustarPagina(this.resultado().length);
-    this.enfocar('titulo-catalogo');
+    this.productos.update((lista) => lista.map((p) => (p.id === id ? { ...p, eliminado } : p)));
   }
 
   /** Mueve el foco tras el próximo render (el elemento destino puede no existir todavía). */

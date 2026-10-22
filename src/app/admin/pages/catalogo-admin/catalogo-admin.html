@@ -87,6 +87,9 @@
   @if (errorEliminar()) {
     <p role="alert" class="p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-700">{{ errorEliminar() }}</p>
   }
+  @if (errorRestaurar()) {
+    <p role="alert" class="p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-700">{{ errorRestaurar() }}</p>
+  }
 
   @if (cargando()) {
     <p class="text-gray-600" role="status">Cargando productos…</p>
@@ -179,6 +182,25 @@
                       [disabled]="enviandoEliminacion()"
                       class="ml-2 text-gray-700 px-3 py-1 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 disabled:opacity-60 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                       Cancelar
+                    </button>
+                  </td>
+                </tr>
+              } @else if (p.eliminado) {
+                <tr class="bg-gray-50 text-gray-600">
+                  <td class="px-4 py-3">{{ p.id }}</td>
+                  <td class="px-4 py-3 font-medium">
+                    <span class="line-through">{{ p.nombre }}</span>
+                    <span class="ml-2 text-xs font-medium text-gray-700 bg-gray-200 px-2 py-0.5 rounded-full">Eliminado</span>
+                  </td>
+                  <td class="px-4 py-3 max-w-xs break-words">{{ p.descripcion }}</td>
+                  <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
+                  <td class="px-4 py-3 text-right">{{ p.stock }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <button type="button" [id]="'deshacer-' + p.id" (click)="deshacerEliminar(p)"
+                      [disabled]="restaurandoId() !== null"
+                      [attr.aria-label]="'Deshacer eliminación de ' + p.nombre"
+                      class="text-indigo-700 font-medium px-3 py-1 rounded-lg hover:bg-indigo-50 disabled:opacity-60 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                      {{ restaurandoId() === p.id ? 'Restaurando…' : 'Deshacer' }}
                     </button>
                   </td>
                 </tr>

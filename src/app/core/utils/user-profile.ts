@@ -25,3 +25,12 @@ export function getApellido(account: AccountInfo | null | undefined): string {
   const partes = account?.name?.split(' ') ?? [];
   return partes.slice(1).join(' ');
 }
+
+/**
+ * Correo de notificaciones: claim `email` del ID token (campo Email del usuario en Entra ID, claim
+ * opcional de la app SPA). Vacío si no viene. Es adonde orders/notify envían los avisos del pedido
+ * (si no viene, orders usa el usuario de inicio de sesión).
+ */
+export function getEmailNotificaciones(account: AccountInfo | null | undefined): string {
+  return (account?.idTokenClaims?.['email'] as string | undefined) ?? '';
+}

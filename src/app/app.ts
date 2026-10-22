@@ -19,7 +19,7 @@ export class App {
   private readonly msalService = inject(MsalService);
   private readonly authState = inject(AuthState);
 
-  private readonly rutasProtegidas = ['/dashboard', '/catalogo'];
+  private readonly rutasProtegidas = ['/dashboard', '/catalogo', '/pedidos'];
 
   constructor() {
     // Al volver con "Atrás" el navegador puede restaurar la página congelada (bfcache) sin volver a

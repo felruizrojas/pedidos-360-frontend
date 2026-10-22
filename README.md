@@ -32,7 +32,8 @@ Login con **Microsoft Entra ID** (OIDC Authorization Code + PKCE) y consumo del 
 | `/pedidos` | Cliente | "Mis pedidos": listado paginado (`GET /api/orders`, el back filtra los suyos) con filtros por estado y fechas `desde`/`hasta`, badge de estado y total |
 | `/pedidos/nuevo` | Cliente | Revisa el carrito, pide la dirección y crea el pedido (`POST`); muestra los 400 por campo, vacía el carrito y va al detalle |
 | `/pedidos/:id` | Cliente | Detalle (ítems, total, dirección), timeline del historial (`/history`), botones de transición según rol y estado (`PUT /status`, motivo obligatorio al cancelar), edición en CREADO (`PUT`) y eliminar (Admin, `DELETE`) |
-| `/dashboard` | Admin / Operador | Bienvenida, perfil (claims del token) y alta de productos (POST) |
+| `/dashboard` | Admin / Operador | Bienvenida y alta de productos (POST) |
+| `/dashboard/catalogo` | Admin / Operador | Productos vigentes y eliminados en la misma tabla: editar precio/stock (`PUT`), eliminar (`DELETE`, borrado lógico; la fila queda marcada "Eliminado") y "Deshacer" (`PUT /{id}/restaurar`) |
 | `/dashboard/pedidos` y `/dashboard/pedidos/:id` | Admin / Operador | Las mismas vistas de listado y detalle dentro del layout de administración: todos los pedidos, cambios de estado, edición en CREADO y eliminar (Admin) |
 
 ### Qué puede hacer cada rol en pedidos

@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { MsalService } from '@azure/msal-angular';
 import { AccountInfo } from '@azure/msal-browser';
-import { getApellido, getNombre } from '../../core/utils/user-profile';
+import { getApellido, getEmailNotificaciones, getNombre } from '../../core/utils/user-profile';
 import { AuthState } from '../../core/services/auth-state';
 import { environment } from '../../../environments/environment';
 
@@ -19,6 +19,8 @@ export class Login implements OnInit {
   readonly account = signal<AccountInfo | null>(null);
   readonly nombre = computed(() => getNombre(this.account()));
   readonly apellido = computed(() => getApellido(this.account()));
+  /** Solo el email que viene de Azure; si el campo viene vacío no se muestra nada. */
+  readonly notificaciones = computed(() => getEmailNotificaciones(this.account()));
 
   private readonly authState = inject(AuthState);
   readonly roles = this.authState.roles;
@@ -81,7 +83,8 @@ export class Login implements OnInit {
     // ocurre al bootstrapear la app Angular (SSR + hidratación) dentro de un popup.
     // AuthRedirect procesa la respuesta cuando Azure devuelve al usuario a /auth-redirect.
     this.authService.loginRedirect({
-      scopes: [`api://${environment.apiClientId}/access_as_user`],
+      // "email": que el ID token traiga el claim email (campo Email del usuario en Entra ID, se muestra en /login).
+      scopes: [`api://${environment.apiClientId}/access_as_user`, 'email'],
       prompt: 'select_account'
     }).subscribe({
       error: (err) => {

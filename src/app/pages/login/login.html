@@ -6,31 +6,35 @@
           {{ (nombre() || user.username).charAt(0).toUpperCase() }}
         </div>
         <h2 class="text-3xl font-extrabold tracking-tight text-gray-950">
-          @if (nombre()) { ¡Hola, {{ nombre() }}! } @else { Mi perfil }
+          @if (nombre()) { ¡Hola, {{ nombre() }}! } @else { ¡Hola! }
         </h2>
         <p class="text-sm text-gray-500">Sesión iniciada en <span class="font-semibold text-indigo-600">Pedidos 360</span>.</p>
       </div>
 
       <dl class="divide-y divide-gray-100 text-sm">
         <div class="py-3 flex justify-between gap-4">
-          <dt class="text-gray-500">Nombre</dt>
+          <dt class="text-gray-600">Nombre</dt>
           <dd class="font-medium text-gray-900 text-right">{{ nombre() }}</dd>
         </div>
         <div class="py-3 flex justify-between gap-4">
-          <dt class="text-gray-500">Apellido</dt>
+          <dt class="text-gray-600">Apellido</dt>
           <dd class="font-medium text-gray-900 text-right">{{ apellido() }}</dd>
         </div>
         <div class="py-3 flex justify-between gap-4">
-          <dt class="text-gray-500">Correo</dt>
+          <dt class="text-gray-600">Correo</dt>
           <dd class="font-medium text-gray-900 text-right break-all">{{ user.username }}</dd>
         </div>
         <div class="py-3 flex justify-between gap-4">
-          <dt class="text-gray-500">Roles</dt>
+          <dt class="text-gray-600">Notificaciones</dt>
+          <dd class="font-medium text-gray-900 text-right break-all">{{ notificaciones() }}</dd>
+        </div>
+        <div class="py-3 flex justify-between gap-4">
+          <dt class="text-gray-600">Roles</dt>
           <dd class="flex flex-wrap justify-end gap-1.5">
             @for (role of roles(); track role) {
               <span class="text-xs font-medium text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full">{{ role }}</span>
             } @empty {
-              <span class="text-gray-500">Sin roles asignados</span>
+              <span class="text-gray-600">Sin roles asignados</span>
             }
           </dd>
         </div>

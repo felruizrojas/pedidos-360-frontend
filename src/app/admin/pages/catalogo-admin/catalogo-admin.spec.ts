@@ -6,7 +6,7 @@ import { environment } from '../../../../environments/environment';
 import { apiErrorInterceptor } from '../../../core/interceptors/api-error.interceptor';
 import { CatalogoAdmin } from './catalogo-admin';
 
-describe('CatalogoAdmin (eliminar)', () => {
+describe('CatalogoAdmin (eliminar y deshacer)', () => {
   let fixture: ComponentFixture<CatalogoAdmin>;
   let http: HttpTestingController;
   const url = `${environment.apiBaseUrl}/api/catalog/products`;
@@ -14,6 +14,12 @@ describe('CatalogoAdmin (eliminar)', () => {
     { id: 1, nombre: 'Taza', descripcion: 'd', precio: 5, stock: 1 },
     { id: 2, nombre: 'Plato', descripcion: 'd', precio: 8, stock: 3 },
   ];
+  const eliminados = [{ id: 3, nombre: 'Vaso', descripcion: 'd', precio: 4, stock: 2 }];
+
+  function responderCarga(): void {
+    http.expectOne(url).flush(productos);
+    http.expectOne(`${url}/eliminados`).flush(eliminados);
+  }
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -23,7 +29,7 @@ describe('CatalogoAdmin (eliminar)', () => {
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(CatalogoAdmin);
     fixture.detectChanges();
-    http.expectOne(url).flush(productos);
+    responderCarga();
     fixture.detectChanges();
   });
 
@@ -40,7 +46,7 @@ describe('CatalogoAdmin (eliminar)', () => {
     expect(texto()).toContain('¿Eliminar Taza?');
   }
 
-  it('confirmar elimina la fila y muestra el mensaje de éxito', () => {
+  it('confirmar deja la fila como eliminada con el botón Deshacer', () => {
     abrirConfirmacion();
     boton('Confirmar').click();
     fixture.detectChanges();
@@ -51,9 +57,35 @@ describe('CatalogoAdmin (eliminar)', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
     fixture.detectChanges();
 
-    expect(texto()).not.toContain('Taza');
+    expect(root().querySelector('[aria-label="Eliminar Taza"]')).toBeNull();
+    expect(root().querySelector('[aria-label="Deshacer eliminación de Taza"]')).not.toBeNull();
     expect(texto()).toContain('Plato');
-    expect(root().querySelector('[role="status"]')?.textContent).toContain('Producto eliminado');
+    expect(root().querySelector('[role="status"]')?.textContent).toContain('Producto eliminado del catálogo');
+  });
+
+  it('los eliminados se listan con Deshacer, que los restaura', () => {
+    expect(texto()).toContain('Vaso');
+    root().querySelector<HTMLButtonElement>('[aria-label="Deshacer eliminación de Vaso"]')!.click();
+    fixture.detectChanges();
+    expect(texto()).toContain('Restaurando…');
+
+    const req = http.expectOne(`${url}/3/restaurar`);
+    expect(req.request.method).toBe('PUT');
+    req.flush(eliminados[0]);
+    fixture.detectChanges();
+
+    expect(root().querySelector('[aria-label="Deshacer eliminación de Vaso"]')).toBeNull();
+    expect(root().querySelector('[aria-label="Eliminar Vaso"]')).not.toBeNull();
+    expect(root().querySelector('[role="status"]')?.textContent).toContain('Producto restaurado en el catálogo');
+  });
+
+  it('si deshacer falla, la fila sigue eliminada y se muestra el error', () => {
+    root().querySelector<HTMLButtonElement>('[aria-label="Deshacer eliminación de Vaso"]')!.click();
+    http.expectOne(`${url}/3/restaurar`).flush(null, { status: 503, statusText: 'x' });
+    fixture.detectChanges();
+
+    expect(texto()).toContain('El servicio no está disponible');
+    expect(root().querySelector('[aria-label="Deshacer eliminación de Vaso"]')).not.toBeNull();
   });
 
   it('cancelar no llama al servicio', () => {
@@ -75,15 +107,15 @@ describe('CatalogoAdmin (eliminar)', () => {
     expect(texto()).not.toContain('¿Eliminar');
   });
 
-  it('un 404 muestra el mensaje y quita la fila', () => {
+  it('un 404 muestra el mensaje y recarga la lista', () => {
     abrirConfirmacion();
     boton('Confirmar').click();
     http.expectOne(`${url}/1`).flush({ status: 404, mensaje: 'Producto no encontrado con id 1' },
       { status: 404, statusText: 'Not Found' });
+    responderCarga();
     fixture.detectChanges();
 
-    expect(root().querySelector('[role="alert"]')?.textContent).toContain('El producto ya no existe. Recarga la lista.');
-    expect(texto()).not.toContain('Taza');
+    expect(root().querySelector('[role="alert"]')?.textContent).toContain('El producto ya no estaba en el catálogo');
   });
 
   it('un 503 deja la confirmación abierta con el mensaje de servicio', () => {

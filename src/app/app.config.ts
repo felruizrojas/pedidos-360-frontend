@@ -53,7 +53,8 @@ export function msalGuardConfigFactory() {
   return {
     interactionType: 'redirect',
     authRequest: {
-      scopes: [`api://${environment.apiClientId}/access_as_user`]
+      // "email": que el ID token traiga el claim email (campo Email del usuario en Entra ID, se muestra en /login).
+      scopes: [`api://${environment.apiClientId}/access_as_user`, 'email']
     }
   };
 }

@@ -6,7 +6,7 @@
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
-      "source": "/(dashboard|catalogo|login|auth-redirect)(.*)",
+      "source": "/(dashboard|catalogo|pedidos|login|auth-redirect)(.*)",
       "headers": [{ "key": "Cache-Control", "value": "no-store" }]
     },
     {

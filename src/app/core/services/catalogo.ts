@@ -31,4 +31,14 @@ export class CatalogoService {
   eliminarProducto(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  /** Productos eliminados (solo Admin/Operador), para poder deshacer la eliminación. */
+  obtenerEliminados(): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}/eliminados`);
+  }
+
+  /** Deshace el borrado lógico: el producto vuelve al catálogo. */
+  restaurarProducto(id: number): Observable<Producto> {
+    return this.http.put<Producto>(`${this.apiUrl}/${id}/restaurar`, null);
+  }
 }

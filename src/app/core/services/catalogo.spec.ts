@@ -67,4 +67,22 @@ describe('CatalogoService', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
     expect(completado).toBe(true);
   });
+
+  it('lista los eliminados con GET /eliminados', () => {
+    let res: unknown;
+    service.obtenerEliminados().subscribe((r) => (res = r));
+    const req = http.expectOne(`${url}/eliminados`);
+    expect(req.request.method).toBe('GET');
+    req.flush([producto]);
+    expect(res).toEqual([producto]);
+  });
+
+  it('restaura un producto con PUT /{id}/restaurar', () => {
+    let res: unknown;
+    service.restaurarProducto(1).subscribe((r) => (res = r));
+    const req = http.expectOne(`${url}/1/restaurar`);
+    expect(req.request.method).toBe('PUT');
+    req.flush(producto);
+    expect(res).toEqual(producto);
+  });
 });
