@@ -8,6 +8,7 @@ import {
   CrearPedidoRequest,
   FiltrosPedidos,
   HistorialEstado,
+  MensajeComando,
   Pagina,
   Pedido,
 } from '../models/pedido.model';
@@ -49,6 +50,11 @@ export class PedidosService {
 
   obtenerHistorial(id: number): Observable<HistorialEstado[]> {
     return this.http.get<HistorialEstado[]>(`${this.apiUrl}/${id}/history`);
+  }
+
+  /** Mensajería del pedido por RabbitMQ (solo Operador). */
+  obtenerMensajes(id: number): Observable<MensajeComando[]> {
+    return this.http.get<MensajeComando[]>(`${this.apiUrl}/${id}/messages`);
   }
 
   /** Borrado lógico en el back (solo Operador, solo en CREADO o CANCELADO). */

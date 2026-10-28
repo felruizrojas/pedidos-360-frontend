@@ -31,6 +31,24 @@ export interface Pedido {
   canceladoEn: string | null;
   motivoCancelacion: string | null;
   version: number;
+  /** true si algún mensaje del pedido falló o quedó en la DLQ (ver GET /api/orders/{id}/messages). */
+  alertaMensajeria?: boolean;
+}
+
+export type ComandoMensaje = 'email' | 'kitchen' | 'invoice';
+export type EstadoMensaje = 'ENVIADO' | 'PROCESADO' | 'FALLIDO' | 'EN_DLQ';
+
+/** Un paso de la mensajería del pedido por RabbitMQ (ida orders -> notify y vuelta con el resultado). */
+export interface MensajeComando {
+  comando: ComandoMensaje | string;
+  type: string | null;
+  estado: EstadoMensaje;
+  motivo: string | null;
+  /** Quién hizo la acción que generó el mensaje (solo en el paso ENVIADO). */
+  usuarioNombre: string | null;
+  usuarioRol: string | null;
+  comandoEventId: string | null;
+  fecha: string;
 }
 
 /** Un cambio de estado; estadoAnterior es null en la creación. */

@@ -214,6 +214,11 @@
         }
       </section>
 
+      <!-- Mensajería por RabbitMQ: dashboard del operador -->
+      @if (enDashboard && !soloCliente()) {
+        <app-mensajeria-pedido [pedidoId]="p.id" />
+      }
+
       <!-- Historial -->
       <section aria-labelledby="titulo-historial" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">
         <h2 id="titulo-historial" class="text-lg font-bold text-gray-900">Historial</h2>

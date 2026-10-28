@@ -26,6 +26,7 @@ import {
 } from '../../../core/utils/estados-pedido';
 import { EstadoPedidoBadge } from '../../../shared/components/estado-pedido-badge/estado-pedido-badge';
 import { ItemEditable, ItemsPedidoEditor } from '../../../shared/components/items-pedido-editor/items-pedido-editor';
+import { MensajeriaPedido } from '../mensajeria-pedido/mensajeria-pedido';
 import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
 
 /**
@@ -34,7 +35,16 @@ import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
  */
 @Component({
   selector: 'app-detalle-pedido',
-  imports: [CurrencyPipe, DatePipe, NgTemplateOutlet, RouterLink, ReactiveFormsModule, EstadoPedidoBadge, ItemsPedidoEditor],
+  imports: [
+    CurrencyPipe,
+    DatePipe,
+    NgTemplateOutlet,
+    RouterLink,
+    ReactiveFormsModule,
+    EstadoPedidoBadge,
+    ItemsPedidoEditor,
+    MensajeriaPedido,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './detalle-pedido.html',
 })
