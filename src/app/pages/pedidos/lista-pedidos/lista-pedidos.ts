@@ -31,7 +31,8 @@ export class ListaPedidos implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder).nonNullable;
 
-  protected readonly ESTADOS = ESTADOS_PEDIDO;
+  /** Sin CANCELADO: orders nunca lista pedidos cancelados (ni eliminados). */
+  protected readonly ESTADOS = ESTADOS_PEDIDO.filter((e) => e !== 'CANCELADO');
   protected readonly ETIQUETA_ESTADO = ETIQUETA_ESTADO;
   protected readonly tamanoPagina = PEDIDOS_POR_PAGINA;
 

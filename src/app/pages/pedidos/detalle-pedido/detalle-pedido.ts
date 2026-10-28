@@ -211,7 +211,11 @@ export class DetallePedido implements OnInit {
           this.pedido.set(pedido);
           this.enviandoEstado.set(false);
           this.destino.set(null);
-          this.mensajeExito.set(`El pedido pasó a "${ETIQUETA_ESTADO[pedido.estado]}".`);
+          this.mensajeExito.set(
+            pedido.estado === 'CANCELADO'
+              ? 'El pedido fue cancelado y ya no aparecerá en la lista de pedidos.'
+              : `El pedido pasó a "${ETIQUETA_ESTADO[pedido.estado]}".`,
+          );
           this.cargarHistorial();
         },
         error: (e: unknown) => {

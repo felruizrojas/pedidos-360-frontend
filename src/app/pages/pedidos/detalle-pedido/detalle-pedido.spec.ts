@@ -119,7 +119,7 @@ describe('DetallePedido', () => {
     fixture.detectChanges();
     http.expectOne(`${url}/history`).flush([]);
     fixture.detectChanges();
-    expect(el().textContent).toContain('El pedido pasó a "Cancelado"');
+    expect(el().textContent).toContain('El pedido fue cancelado y ya no aparecerá en la lista de pedidos.');
   });
 
   it('pedido inexistente: mensaje de no encontrado', async () => {
