@@ -1,0 +1,137 @@
+<div class="max-w-6xl space-y-6">
+  <div class="space-y-1">
+    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Usuarios</h1>
+    <p class="text-gray-600">Usuarios de Azure (Entra ID) con rol en Pedidos 360. Solo lectura.</p>
+  </div>
+
+  @if (cargando()) {
+    <p class="text-center text-gray-600" role="status">Cargando usuarios…</p>
+  } @else if (error(); as err) {
+    <div role="alert" class="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 flex flex-wrap items-center justify-center gap-3">
+      <span>{{ err.mensaje }}</span>
+      @if (err.status === 0 || err.status >= 500) {
+        <button type="button" (click)="cargar()" class="font-semibold underline cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">Reintentar</button>
+      }
+    </div>
+  } @else if (usuarios().length === 0) {
+    <p class="text-center text-gray-600">No hay usuarios con rol asignado en la aplicación.</p>
+  } @else {
+    <form [formGroup]="filtrosForm" (ngSubmit)="$event.preventDefault()"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 grid gap-3 sm:grid-cols-3 items-end"
+      aria-label="Filtros de usuarios">
+      <div>
+        <label for="filtro-rol" class="block text-sm font-medium text-gray-700">Rol</label>
+        <select id="filtro-rol" formControlName="rol"
+          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 bg-white focus-visible:outline-2 focus-visible:outline-indigo-600">
+          <option value="">Todos</option>
+          @for (r of ROLES; track r) {
+            <option [value]="r">{{ r }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label for="filtro-estado" class="block text-sm font-medium text-gray-700">Estado</label>
+        <select id="filtro-estado" formControlName="estado"
+          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 bg-white focus-visible:outline-2 focus-visible:outline-indigo-600">
+          <option value="">Todos</option>
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+      </div>
+      <div>
+        <button type="button" (click)="limpiarFiltros()" [disabled]="!hayFiltros()"
+          class="w-full px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-60 cursor-pointer disabled:cursor-default focus-visible:outline-2 focus-visible:outline-indigo-600">
+          Limpiar filtros
+        </button>
+      </div>
+    </form>
+
+    <p class="text-sm text-gray-600" role="status">
+      Mostrando {{ filtrados().length }} de {{ usuarios().length }} usuarios
+    </p>
+
+    @if (filtrados().length === 0) {
+      <p class="text-center text-gray-600">No hay usuarios que coincidan con los filtros.</p>
+    } @else {
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+      <table class="w-full text-sm">
+        <caption class="sr-only">Usuarios: {{ filtrados().length }} de {{ usuarios().length }}</caption>
+        <thead class="bg-gray-50 text-left text-gray-700">
+          <tr>
+            <th scope="col" class="px-4 py-3 font-semibold">Nombre</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Correo de inicio de sesión</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Rol</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Estado</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Último acceso</th>
+            <th scope="col" class="px-4 py-3"><span class="sr-only">Detalle</span></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (u of filtrados(); track u.id) {
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 font-medium text-gray-900">{{ u.nombre || '—' }}</td>
+              <td class="px-4 py-3 text-gray-700 break-all">{{ u.usuarioPrincipal || '—' }}</td>
+              <td class="px-4 py-3 text-gray-700">{{ u.roles.length ? u.roles.join(', ') : 'Sin rol' }}</td>
+              <td class="px-4 py-3">
+                @if (u.activo) {
+                  <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full ring-1 ring-inset bg-green-100 text-green-800 ring-green-300">
+                    <span aria-hidden="true" class="size-1.5 rounded-full bg-green-700"></span>Activo
+                  </span>
+                } @else {
+                  <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full ring-1 ring-inset bg-gray-100 text-gray-700 ring-gray-300">
+                    <span aria-hidden="true" class="size-1.5 rounded-full bg-gray-500"></span>Inactivo
+                  </span>
+                }
+              </td>
+              <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
+                {{ u.ultimoAcceso ? (u.ultimoAcceso | date: 'dd-MM-yyyy HH:mm') : 'Nunca inició sesión' }}
+              </td>
+              <td class="px-4 py-3 text-right">
+                <button type="button" (click)="alternarDetalle(u.id)"
+                  [attr.aria-expanded]="abiertoId() === u.id" [attr.aria-controls]="'detalle-' + u.id"
+                  [attr.aria-label]="(abiertoId() === u.id ? 'Ocultar detalle de ' : 'Ver detalle de ') + (u.nombre || u.id)"
+                  class="font-medium text-indigo-700 px-3 py-1 rounded-lg hover:bg-indigo-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                  {{ abiertoId() === u.id ? 'Ocultar' : 'Ver detalle' }}
+                </button>
+              </td>
+            </tr>
+            @if (abiertoId() === u.id) {
+              <tr [id]="'detalle-' + u.id" class="bg-gray-50">
+                <td colspan="6" class="px-4 py-4">
+                  <dl class="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div><dt class="text-gray-500">Nombres</dt><dd class="text-gray-900">{{ u.nombres || '—' }}</dd></div>
+                    <div><dt class="text-gray-500">Apellidos</dt><dd class="text-gray-900">{{ u.apellidos || '—' }}</dd></div>
+                    <div><dt class="text-gray-500">Correo de inicio de sesión</dt><dd class="text-gray-900 break-all">{{ u.usuarioPrincipal || '—' }}</dd></div>
+                    <div>
+                      <dt class="text-gray-500">Correo de notificaciones</dt>
+                      <dd class="text-gray-900 break-all">{{ u.email || 'El de inicio de sesión (sin correo propio en Azure)' }}</dd>
+                    </div>
+                    <div><dt class="text-gray-500">Roles</dt><dd class="text-gray-900">{{ u.roles.length ? u.roles.join(', ') : 'Sin rol' }}</dd></div>
+                    <div>
+                      <dt class="text-gray-500">Cuenta en Azure</dt>
+                      <dd class="text-gray-900">{{ u.cuentaHabilitada === null ? '—' : u.cuentaHabilitada ? 'Habilitada' : 'Deshabilitada' }}</dd>
+                    </div>
+                    <div><dt class="text-gray-500">Tipo</dt><dd class="text-gray-900">{{ u.tipo || '—' }}</dd></div>
+                    <div><dt class="text-gray-500">Cargo</dt><dd class="text-gray-900">{{ u.cargo || '—' }}</dd></div>
+                    <div><dt class="text-gray-500">Departamento</dt><dd class="text-gray-900">{{ u.departamento || '—' }}</dd></div>
+                    <div><dt class="text-gray-500">Teléfono</dt><dd class="text-gray-900">{{ u.telefono || '—' }}</dd></div>
+                    <div>
+                      <dt class="text-gray-500">Creado en Azure</dt>
+                      <dd class="text-gray-900">{{ u.creadoEn ? (u.creadoEn | date: 'dd-MM-yyyy HH:mm') : '—' }}</dd>
+                    </div>
+                    <div>
+                      <dt class="text-gray-500">Primer inicio de sesión</dt>
+                      <dd class="text-gray-900">{{ u.primerAcceso ? (u.primerAcceso | date: 'dd-MM-yyyy HH:mm') : 'Nunca' }}</dd>
+                    </div>
+                    <div class="sm:col-span-2 lg:col-span-3"><dt class="text-gray-500">ID (Entra ID)</dt><dd class="text-gray-900 font-mono text-xs break-all">{{ u.id }}</dd></div>
+                  </dl>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  }
+</div>

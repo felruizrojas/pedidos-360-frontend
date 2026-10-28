@@ -173,10 +173,10 @@
                   <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
                   <td class="px-4 py-3 text-right">{{ p.stock }}</td>
                   <td class="px-4 py-3 text-right whitespace-nowrap">
-                    <span class="mr-2 text-gray-800">¿Eliminar <em>{{ p.nombre }}</em>?</span>
+                    <span class="mr-2 text-gray-800">¿Desactivar <em>{{ p.nombre }}</em>?</span>
                     <button type="button" (click)="confirmarEliminar(p)" [disabled]="enviandoEliminacion()"
                       class="bg-red-600 text-white px-3 py-1 rounded-lg font-medium hover:bg-red-700 disabled:opacity-60 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                      {{ enviandoEliminacion() ? 'Eliminando…' : 'Confirmar' }}
+                      {{ enviandoEliminacion() ? 'Desactivando…' : 'Confirmar' }}
                     </button>
                     <button type="button" [id]="'cancelar-eliminar-' + p.id" (click)="cancelarEliminar()"
                       [disabled]="enviandoEliminacion()"
@@ -190,7 +190,7 @@
                   <td class="px-4 py-3">{{ p.id }}</td>
                   <td class="px-4 py-3 font-medium">
                     <span class="line-through">{{ p.nombre }}</span>
-                    <span class="ml-2 text-xs font-medium text-gray-700 bg-gray-200 px-2 py-0.5 rounded-full">Eliminado</span>
+                    <span class="ml-2 text-xs font-medium text-gray-700 bg-gray-200 px-2 py-0.5 rounded-full">Desactivado</span>
                   </td>
                   <td class="px-4 py-3 max-w-xs break-words">{{ p.descripcion }}</td>
                   <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
@@ -198,9 +198,9 @@
                   <td class="px-4 py-3 text-right">
                     <button type="button" [id]="'deshacer-' + p.id" (click)="deshacerEliminar(p)"
                       [disabled]="restaurandoId() !== null"
-                      [attr.aria-label]="'Deshacer eliminación de ' + p.nombre"
+                      [attr.aria-label]="'Reactivar ' + p.nombre"
                       class="text-indigo-700 font-medium px-3 py-1 rounded-lg hover:bg-indigo-50 disabled:opacity-60 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                      {{ restaurandoId() === p.id ? 'Restaurando…' : 'Deshacer' }}
+                      {{ restaurandoId() === p.id ? 'Reactivando…' : 'Reactivar' }}
                     </button>
                   </td>
                 </tr>
@@ -212,16 +212,16 @@
                   <td class="px-4 py-3 text-right">{{ p.precio | currency: 'CLP':'symbol-narrow':'1.0-0' }}</td>
                   <td class="px-4 py-3 text-right">{{ p.stock }}</td>
                   <td class="px-4 py-3 text-right">
-                    <!-- Todo /dashboard ya exige Admin u Operador (authGuard), así que quien ve esto puede editar y eliminar. -->
+                    <!-- /dashboard/catalogo exige Admin (authGuard), así que quien ve esto puede editar y desactivar. -->
                     <button type="button" [id]="'editar-' + p.id" (click)="editar(p)"
                       [attr.aria-label]="'Editar precio y stock de ' + p.nombre"
                       class="text-indigo-700 font-medium px-3 py-1 rounded-lg hover:bg-indigo-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                       Editar
                     </button>
                     <button type="button" [id]="'eliminar-' + p.id" (click)="pedirEliminar(p)"
-                      [attr.aria-label]="'Eliminar ' + p.nombre"
+                      [attr.aria-label]="'Desactivar ' + p.nombre"
                       class="text-red-700 font-medium px-3 py-1 rounded-lg hover:bg-red-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                      Eliminar
+                      Desactivar
                     </button>
                   </td>
                 </tr>

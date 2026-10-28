@@ -20,7 +20,7 @@ export const routes: Routes = [
   // 🔄 2. Nueva ruta pública exclusiva para capturar las respuestas del popup de Azure
   { path: 'auth-redirect', component: AuthRedirect },
 
-  // 🔒 Pedidos del Cliente ("mis pedidos"). Admin y Operador los gestionan en /dashboard/pedidos.
+  // 🔒 Pedidos del Cliente ("mis pedidos"). El Operador los gestiona en /dashboard/pedidos.
   // "nuevo" va antes de ":id". Carga diferida (como /dashboard). Lo que cada rol puede hacer dentro del
   // pedido lo decide orders.
   {
@@ -46,7 +46,8 @@ export const routes: Routes = [
     ],
   },
 
-  // 🔒 Ruta protegida del Dashboard
+  // 🔒 Dashboard: el Cliente no entra. Dentro, catálogo y usuarios son solo de Admin y pedidos solo de Operador
+  // (cada sección tiene su propio guard en admin.routes.ts).
   { 
     path: 'dashboard', 
     loadChildren: () => import('./admin/admin.routes').then((m) => m.adminRoutes),

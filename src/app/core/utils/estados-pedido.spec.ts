@@ -28,20 +28,32 @@ describe('estados-pedido', () => {
     });
   });
 
-  it('Operador y Admin pueden hacer todas las transiciones válidas', () => {
-    for (const roles of [ADMIN, OPERADOR]) {
-      for (const estado of ESTADOS_PEDIDO) {
-        expect(transicionesPermitidas(estado, roles)).toEqual(TRANSICIONES[estado]);
-      }
+  it('Operador puede hacer todas las transiciones válidas', () => {
+    for (const estado of ESTADOS_PEDIDO) {
+      expect(transicionesPermitidas(estado, OPERADOR)).toEqual(TRANSICIONES[estado]);
     }
+  });
+
+  it('Admin no es actor de pedidos: sin transiciones, sin editar ni eliminar', () => {
+    for (const estado of ESTADOS_PEDIDO) {
+      expect(transicionesPermitidas(estado, ADMIN)).toEqual([]);
+    }
+    expect(puedeEditar('CREADO', ADMIN)).toBe(false);
+    expect(puedeEliminar('CREADO', ADMIN)).toBe(false);
+  });
+
+  it('no se puede despachar sin aceptar', () => {
+    expect(puedeTransicionar('CREADO', 'DESPACHADO', OPERADOR)).toBe(false);
+    expect(puedeTransicionar('CREADO', 'EN_PREPARACION', OPERADOR)).toBe(false);
+    expect(puedeTransicionar('EN_PREPARACION', 'DESPACHADO', OPERADOR)).toBe(true);
   });
 
   it('rechaza transiciones inválidas aunque el rol sea Operador', () => {
     expect(puedeTransicionar('CREADO', 'DESPACHADO', OPERADOR)).toBe(false);
-    expect(puedeTransicionar('CREADO', 'ENTREGADO', ADMIN)).toBe(false);
+    expect(puedeTransicionar('CREADO', 'ENTREGADO', OPERADOR)).toBe(false);
     expect(puedeTransicionar('DESPACHADO', 'CANCELADO', OPERADOR)).toBe(false);
-    expect(puedeTransicionar('ENTREGADO', 'CANCELADO', ADMIN)).toBe(false);
-    expect(puedeTransicionar('CANCELADO', 'CREADO', ADMIN)).toBe(false);
+    expect(puedeTransicionar('ENTREGADO', 'CANCELADO', OPERADOR)).toBe(false);
+    expect(puedeTransicionar('CANCELADO', 'CREADO', OPERADOR)).toBe(false);
     expect(puedeTransicionar('ACEPTADO', 'CREADO', OPERADOR)).toBe(false);
   });
 
@@ -64,23 +76,21 @@ describe('estados-pedido', () => {
     expect(esSoloCliente(CLIENTE)).toBe(true);
   });
 
-  it('crear: solo Cliente; editar: Cliente, Operador y Admin, solo en CREADO', () => {
+  it('crear: solo Cliente; editar: Cliente y Operador, solo en CREADO', () => {
     expect(puedeCrearPedidos(CLIENTE)).toBe(true);
     expect(puedeCrearPedidos(OPERADOR)).toBe(false);
     expect(puedeCrearPedidos(ADMIN)).toBe(false);
     expect(puedeEditar('CREADO', CLIENTE)).toBe(true);
     expect(puedeEditar('CREADO', OPERADOR)).toBe(true);
-    expect(puedeEditar('CREADO', ADMIN)).toBe(true);
     expect(puedeEditar('ACEPTADO', CLIENTE)).toBe(false);
     expect(puedeEditar('ACEPTADO', OPERADOR)).toBe(false);
   });
 
-  it('eliminar: solo Admin y solo en CREADO o CANCELADO', () => {
-    expect(puedeEliminar('CREADO', ADMIN)).toBe(true);
-    expect(puedeEliminar('CANCELADO', ADMIN)).toBe(true);
-    expect(puedeEliminar('ACEPTADO', ADMIN)).toBe(false);
-    expect(puedeEliminar('ENTREGADO', ADMIN)).toBe(false);
-    expect(puedeEliminar('CREADO', OPERADOR)).toBe(false);
+  it('eliminar: solo Operador y solo en CREADO o CANCELADO', () => {
+    expect(puedeEliminar('CREADO', OPERADOR)).toBe(true);
+    expect(puedeEliminar('CANCELADO', OPERADOR)).toBe(true);
+    expect(puedeEliminar('ACEPTADO', OPERADOR)).toBe(false);
+    expect(puedeEliminar('ENTREGADO', OPERADOR)).toBe(false);
     expect(puedeEliminar('CANCELADO', CLIENTE)).toBe(false);
   });
 

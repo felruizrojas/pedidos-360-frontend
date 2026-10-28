@@ -6,7 +6,7 @@ import { environment } from '../../../../environments/environment';
 import { apiErrorInterceptor } from '../../../core/interceptors/api-error.interceptor';
 import { CatalogoAdmin } from './catalogo-admin';
 
-describe('CatalogoAdmin (eliminar y deshacer)', () => {
+describe('CatalogoAdmin (desactivar y reactivar)', () => {
   let fixture: ComponentFixture<CatalogoAdmin>;
   let http: HttpTestingController;
   const url = `${environment.apiBaseUrl}/api/catalog/products`;
@@ -41,51 +41,51 @@ describe('CatalogoAdmin (eliminar y deshacer)', () => {
     Array.from(root().querySelectorAll('button')).find((b) => b.textContent?.trim() === texto)!;
 
   function abrirConfirmacion(): void {
-    root().querySelector<HTMLButtonElement>('[aria-label="Eliminar Taza"]')!.click();
+    root().querySelector<HTMLButtonElement>('[aria-label="Desactivar Taza"]')!.click();
     fixture.detectChanges();
-    expect(texto()).toContain('¿Eliminar Taza?');
+    expect(texto()).toContain('¿Desactivar Taza?');
   }
 
-  it('confirmar deja la fila como eliminada con el botón Deshacer', () => {
+  it('confirmar deja la fila como eliminada con el botón Reactivar', () => {
     abrirConfirmacion();
     boton('Confirmar').click();
     fixture.detectChanges();
-    expect(texto()).toContain('Eliminando…');
+    expect(texto()).toContain('Desactivando…');
 
     const req = http.expectOne(`${url}/1`);
     expect(req.request.method).toBe('DELETE');
     req.flush(null, { status: 204, statusText: 'No Content' });
     fixture.detectChanges();
 
-    expect(root().querySelector('[aria-label="Eliminar Taza"]')).toBeNull();
-    expect(root().querySelector('[aria-label="Deshacer eliminación de Taza"]')).not.toBeNull();
+    expect(root().querySelector('[aria-label="Desactivar Taza"]')).toBeNull();
+    expect(root().querySelector('[aria-label="Reactivar Taza"]')).not.toBeNull();
     expect(texto()).toContain('Plato');
-    expect(root().querySelector('[role="status"]')?.textContent).toContain('Producto eliminado del catálogo');
+    expect(root().querySelector('[role="status"]')?.textContent).toContain('Producto desactivado del catálogo');
   });
 
-  it('los eliminados se listan con Deshacer, que los restaura', () => {
+  it('los eliminados se listan con Reactivar, que los restaura', () => {
     expect(texto()).toContain('Vaso');
-    root().querySelector<HTMLButtonElement>('[aria-label="Deshacer eliminación de Vaso"]')!.click();
+    root().querySelector<HTMLButtonElement>('[aria-label="Reactivar Vaso"]')!.click();
     fixture.detectChanges();
-    expect(texto()).toContain('Restaurando…');
+    expect(texto()).toContain('Reactivando…');
 
     const req = http.expectOne(`${url}/3/restaurar`);
     expect(req.request.method).toBe('PUT');
     req.flush(eliminados[0]);
     fixture.detectChanges();
 
-    expect(root().querySelector('[aria-label="Deshacer eliminación de Vaso"]')).toBeNull();
-    expect(root().querySelector('[aria-label="Eliminar Vaso"]')).not.toBeNull();
-    expect(root().querySelector('[role="status"]')?.textContent).toContain('Producto restaurado en el catálogo');
+    expect(root().querySelector('[aria-label="Reactivar Vaso"]')).toBeNull();
+    expect(root().querySelector('[aria-label="Desactivar Vaso"]')).not.toBeNull();
+    expect(root().querySelector('[role="status"]')?.textContent).toContain('Producto reactivado en el catálogo');
   });
 
-  it('si deshacer falla, la fila sigue eliminada y se muestra el error', () => {
-    root().querySelector<HTMLButtonElement>('[aria-label="Deshacer eliminación de Vaso"]')!.click();
+  it('si reactivar falla, la fila sigue eliminada y se muestra el error', () => {
+    root().querySelector<HTMLButtonElement>('[aria-label="Reactivar Vaso"]')!.click();
     http.expectOne(`${url}/3/restaurar`).flush(null, { status: 503, statusText: 'x' });
     fixture.detectChanges();
 
     expect(texto()).toContain('El servicio no está disponible');
-    expect(root().querySelector('[aria-label="Deshacer eliminación de Vaso"]')).not.toBeNull();
+    expect(root().querySelector('[aria-label="Reactivar Vaso"]')).not.toBeNull();
   });
 
   it('cancelar no llama al servicio', () => {
@@ -94,7 +94,7 @@ describe('CatalogoAdmin (eliminar y deshacer)', () => {
     fixture.detectChanges();
 
     http.expectNone(`${url}/1`);
-    expect(texto()).not.toContain('¿Eliminar');
+    expect(texto()).not.toContain('¿Desactivar');
     expect(texto()).toContain('Taza');
   });
 
@@ -104,7 +104,7 @@ describe('CatalogoAdmin (eliminar y deshacer)', () => {
     fixture.detectChanges();
 
     http.expectNone(`${url}/1`);
-    expect(texto()).not.toContain('¿Eliminar');
+    expect(texto()).not.toContain('¿Desactivar');
   });
 
   it('un 404 muestra el mensaje y recarga la lista', () => {
@@ -125,6 +125,6 @@ describe('CatalogoAdmin (eliminar y deshacer)', () => {
     fixture.detectChanges();
 
     expect(texto()).toContain('El servicio no está disponible');
-    expect(texto()).toContain('¿Eliminar Taza?');
+    expect(texto()).toContain('¿Desactivar Taza?');
   });
 });

@@ -56,22 +56,23 @@ export function esEstadoPedido(valor: unknown): valor is EstadoPedido {
   return typeof valor === 'string' && (ESTADOS_PEDIDO as string[]).includes(valor);
 }
 
-function esStaff(roles: readonly string[]): boolean {
-  return roles.includes('Admin') || roles.includes('Operador');
+/** Actores de pedidos: Operador (gestiona todos) y Cliente (solo los suyos). Admin no participa. */
+function esOperador(roles: readonly string[]): boolean {
+  return roles.includes('Operador');
 }
 
-/** Solo Cliente (sin Admin ni Operador): ve únicamente sus pedidos. */
+/** Solo Cliente (sin Operador): ve únicamente sus pedidos. */
 export function esSoloCliente(roles: readonly string[]): boolean {
-  return roles.includes('Cliente') && !esStaff(roles);
+  return roles.includes('Cliente') && !esOperador(roles);
 }
 
 /**
  * Estados a los que el usuario puede llevar el pedido:
- * Admin/Operador, cualquier transición válida; Cliente, solo cancelar en CREADO.
+ * Operador, cualquier transición válida (nunca despachar sin aceptar); Cliente, solo cancelar en CREADO.
  */
 export function transicionesPermitidas(estado: EstadoPedido, roles: readonly string[]): EstadoPedido[] {
   const validas = TRANSICIONES[estado] ?? [];
-  if (esStaff(roles)) return validas;
+  if (esOperador(roles)) return validas;
   if (roles.includes('Cliente') && estado === 'CREADO') return validas.filter((e) => e === 'CANCELADO');
   return [];
 }
@@ -85,12 +86,12 @@ export function puedeCrearPedidos(roles: readonly string[]): boolean {
   return roles.includes('Cliente');
 }
 
-/** Editar ítems y dirección: solo en CREADO; Cliente (sus pedidos), Admin u Operador (cualquiera). */
+/** Editar ítems y dirección: solo en CREADO; Cliente (sus pedidos) u Operador (cualquiera). */
 export function puedeEditar(estado: EstadoPedido, roles: readonly string[]): boolean {
-  return estado === 'CREADO' && (roles.includes('Cliente') || esStaff(roles));
+  return estado === 'CREADO' && (roles.includes('Cliente') || esOperador(roles));
 }
 
-/** Borrado lógico: solo Admin y solo en CREADO o CANCELADO. */
+/** Borrado lógico: solo Operador y solo en CREADO o CANCELADO. */
 export function puedeEliminar(estado: EstadoPedido, roles: readonly string[]): boolean {
-  return roles.includes('Admin') && (estado === 'CREADO' || estado === 'CANCELADO');
+  return esOperador(roles) && (estado === 'CREADO' || estado === 'CANCELADO');
 }

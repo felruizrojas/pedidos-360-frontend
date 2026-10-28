@@ -15,7 +15,7 @@ import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
 const PEDIDOS_POR_PAGINA = 10;
 
 /**
- * /pedidos (Cliente) y /dashboard/pedidos (Admin/Operador): listado paginado en el servidor.
+ * /pedidos (Cliente) y /dashboard/pedidos (Operador): listado paginado en el servidor.
  * Un Cliente solo recibe los suyos: lo filtra orders.
  */
 @Component({

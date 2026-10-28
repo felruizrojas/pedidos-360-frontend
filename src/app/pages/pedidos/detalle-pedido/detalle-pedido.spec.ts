@@ -53,10 +53,11 @@ describe('DetallePedido', () => {
     expect(el().querySelectorAll('ol li')).toHaveLength(1);
   });
 
-  it('Operador en CREADO: aceptar, cancelar y editar; sin eliminar', async () => {
+  it('Operador en CREADO: aceptar, cancelar, editar y eliminar; no puede despachar sin aceptar', async () => {
     await montar(['Operador'], pedidoEjemplo());
-    expect(botones()).toEqual(expect.arrayContaining(['Aceptar pedido', 'Cancelar pedido', 'Editar pedido']));
-    expect(botones()).not.toContain('Eliminar pedido');
+    expect(botones()).toEqual(
+      expect.arrayContaining(['Aceptar pedido', 'Cancelar pedido', 'Editar pedido', 'Eliminar pedido']),
+    );
     expect(botones()).not.toContain('Despachar pedido');
   });
 
@@ -72,16 +73,14 @@ describe('DetallePedido', () => {
     expect(el().textContent).not.toContain('Acciones');
   });
 
-  it('Admin en CANCELADO: puede eliminar', async () => {
-    await montar(['Admin'], pedidoEjemplo({ estado: 'CANCELADO' }));
+  it('Operador en CANCELADO: solo puede eliminar', async () => {
+    await montar(['Operador'], pedidoEjemplo({ estado: 'CANCELADO' }));
     expect(botones()).toEqual(['Eliminar pedido']);
   });
 
-  it('Admin en CREADO: aceptar, cancelar, editar y eliminar', async () => {
+  it('Admin no es actor de pedidos: sin acciones', async () => {
     await montar(['Admin'], pedidoEjemplo());
-    expect(botones()).toEqual(
-      expect.arrayContaining(['Aceptar pedido', 'Cancelar pedido', 'Editar pedido', 'Eliminar pedido']),
-    );
+    expect(el().textContent).not.toContain('Acciones');
   });
 
   it('muestra el 409 de orders en un role="alert"', async () => {

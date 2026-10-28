@@ -32,7 +32,7 @@ export class CatalogoService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  /** Productos eliminados (solo Admin/Operador), para poder deshacer la eliminación. */
+  /** Productos eliminados (solo Admin), para poder deshacer la eliminación. */
   obtenerEliminados(): Observable<Producto[]> {
     return this.http.get<Producto[]>(`${this.apiUrl}/eliminados`);
   }

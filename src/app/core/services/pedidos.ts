@@ -51,7 +51,7 @@ export class PedidosService {
     return this.http.get<HistorialEstado[]>(`${this.apiUrl}/${id}/history`);
   }
 
-  /** Borrado lógico en el back (solo Admin, solo en CREADO o CANCELADO). */
+  /** Borrado lógico en el back (solo Operador, solo en CREADO o CANCELADO). */
   eliminarPedido(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
+import { AuthState } from '../../../core/services/auth-state';
 import { getNombre } from '../../../core/utils/user-profile';
 
 @Component({
@@ -16,21 +17,34 @@ import { getNombre } from '../../../core/utils/user-profile';
         <p class="text-gray-600">Este es el panel de administración de Pedidos 360.</p>
       </div>
 
-      <a routerLink="/dashboard/catalogo"
-        class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow focus-visible:outline-2 focus-visible:outline-indigo-600">
-        <h2 class="text-lg font-bold text-gray-900">Catálogo</h2>
-        <p class="text-sm text-gray-600">Consulta los productos y agrega nuevos.</p>
-      </a>
+      @if (esAdmin()) {
+        <a routerLink="/dashboard/catalogo"
+          class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow focus-visible:outline-2 focus-visible:outline-indigo-600">
+          <h2 class="text-lg font-bold text-gray-900">Catálogo</h2>
+          <p class="text-sm text-gray-600">Consulta los productos y agrega nuevos.</p>
+        </a>
 
-      <a routerLink="/dashboard/pedidos"
-        class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow focus-visible:outline-2 focus-visible:outline-indigo-600">
-        <h2 class="text-lg font-bold text-gray-900">Pedidos</h2>
-        <p class="text-sm text-gray-600">Revisa los pedidos, cambia su estado y edítalos.</p>
-      </a>
+        <a routerLink="/dashboard/usuarios"
+          class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow focus-visible:outline-2 focus-visible:outline-indigo-600">
+          <h2 class="text-lg font-bold text-gray-900">Usuarios</h2>
+          <p class="text-sm text-gray-600">Revisa los usuarios de Azure, su rol y si ya iniciaron sesión.</p>
+        </a>
+      }
+
+      @if (esOperador()) {
+        <a routerLink="/dashboard/pedidos"
+          class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow focus-visible:outline-2 focus-visible:outline-indigo-600">
+          <h2 class="text-lg font-bold text-gray-900">Pedidos</h2>
+          <p class="text-sm text-gray-600">Revisa los pedidos, cambia su estado y edítalos.</p>
+        </a>
+      }
     </div>
   `,
 })
 export class Bienvenida {
   private readonly msalService = inject(MsalService);
+  private readonly authState = inject(AuthState);
   protected readonly nombre = getNombre(this.msalService.instance.getActiveAccount()) || null;
+  protected readonly esAdmin = computed(() => this.authState.roles().includes('Admin'));
+  protected readonly esOperador = computed(() => this.authState.roles().includes('Operador'));
 }

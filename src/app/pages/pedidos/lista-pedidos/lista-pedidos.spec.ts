@@ -54,7 +54,7 @@ describe('ListaPedidos', () => {
   });
 
   it('aplica los filtros de estado y fechas', async () => {
-    await montar('Admin');
+    await montar('Operador');
     http.expectOne((r) => r.url === url).flush({ contenido: [], pagina: 0, tamano: 10, totalElementos: 0, totalPaginas: 0 });
     fixture.detectChanges();
 
@@ -79,7 +79,7 @@ describe('ListaPedidos', () => {
   });
 
   it('rechaza un rango de fechas invertido sin llamar al back', async () => {
-    await montar('Admin');
+    await montar('Operador');
     http.expectOne((r) => r.url === url).flush({ contenido: [], pagina: 0, tamano: 10, totalElementos: 0, totalPaginas: 0 });
     fixture.detectChanges();
     const desde = el().querySelector<HTMLInputElement>('#filtro-desde')!;

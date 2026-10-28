@@ -135,7 +135,7 @@ export class CatalogoAdmin implements OnInit {
   protected readonly errorEliminar = signal('');
   protected readonly mensajeExito = signal('');
 
-  // Deshacer la eliminación: la fila queda en la tabla marcada como eliminada, con el botón "Deshacer".
+  // Reactivar: la fila desactivada queda en la tabla marcada como tal, con el botón "Reactivar".
   protected readonly restaurandoId = signal<number | null>(null);
   protected readonly errorRestaurar = signal('');
 
@@ -181,7 +181,7 @@ export class CatalogoAdmin implements OnInit {
   protected cargar(): void {
     this.cargando.set(true);
     this.errorCarga.set('');
-    // Los eliminados se muestran en la misma tabla para poder deshacer. Si esa lista falla, se ven los vigentes igual.
+    // Los eliminados se muestran en la misma tabla para poder reactivarlos. Si esa lista falla, se ven los vigentes igual.
     forkJoin({
       vigentes: this.catalogoService.obtenerProductos(),
       eliminados: this.catalogoService.obtenerEliminados().pipe(catchError(() => of([]))),
@@ -352,7 +352,7 @@ export class CatalogoAdmin implements OnInit {
       next: () => {
         this.enviandoEliminacion.set(false);
         this.marcarEliminado(producto.id, true);
-        this.mensajeExito.set('Producto eliminado del catálogo. Puedes deshacerlo con "Deshacer".');
+        this.mensajeExito.set('Producto desactivado del catálogo. Puedes volver a activarlo con "Reactivar".');
         this.enfocar(`deshacer-${producto.id}`);
       },
       error: (e: unknown) => {
@@ -364,7 +364,7 @@ export class CatalogoAdmin implements OnInit {
           this.errorEliminar.set('El producto ya no estaba en el catálogo. Se actualizó la lista.');
           this.cargar();
         } else {
-          this.errorEliminar.set(mensajeErrorApi(apiError, 'eliminar'));
+          this.errorEliminar.set(mensajeErrorApi(apiError, 'desactivar'));
         }
       },
     });
@@ -381,20 +381,20 @@ export class CatalogoAdmin implements OnInit {
       next: () => {
         this.restaurandoId.set(null);
         this.marcarEliminado(producto.id, false);
-        this.mensajeExito.set('Producto restaurado en el catálogo.');
+        this.mensajeExito.set('Producto reactivado en el catálogo.');
         this.enfocar(`eliminar-${producto.id}`);
       },
       error: (e: unknown) => {
         const apiError: ApiError = esApiError(e) ? e : { status: 0, mensaje: '' };
         this.restaurandoId.set(null);
         this.errorRestaurar.set(
-          apiError.status === 404 ? 'El producto ya no existe. Recarga la lista.' : mensajeErrorApi(apiError, 'restaurar'),
+          apiError.status === 404 ? 'El producto ya no existe. Recarga la lista.' : mensajeErrorApi(apiError, 'reactivar'),
         );
       },
     });
   }
 
-  /** La fila se queda en la tabla: solo cambia su estado (y con él, el botón Eliminar/Deshacer). */
+  /** La fila se queda en la tabla: solo cambia su estado (y con él, el botón Desactivar/Reactivar). */
   private marcarEliminado(id: number, eliminado: boolean): void {
     this.eliminandoId.set(null);
     this.productos.update((lista) => lista.map((p) => (p.id === id ? { ...p, eliminado } : p)));

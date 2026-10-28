@@ -29,7 +29,7 @@ import { ItemEditable, ItemsPedidoEditor } from '../../../shared/components/item
 import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
 
 /**
- * /pedidos/:id y /dashboard/pedidos/:id: detalle, historial, transiciones según rol y estado, edición en CREADO y borrado (Admin).
+ * /pedidos/:id y /dashboard/pedidos/:id: detalle, historial, transiciones según rol y estado, edición en CREADO y borrado (Operador).
  * Los botones son una ayuda: orders es la autoridad y, si responde 409/403, se muestra su mensaje.
  */
 @Component({
@@ -128,7 +128,7 @@ export class DetallePedido implements OnInit {
     return null;
   }
 
-  // --- Eliminación (Admin) ---
+  // --- Eliminación (Operador) ---
   protected readonly confirmandoEliminar = signal(false);
   protected readonly eliminando = signal(false);
 

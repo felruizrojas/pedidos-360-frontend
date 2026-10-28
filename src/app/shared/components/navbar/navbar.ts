@@ -17,7 +17,7 @@ export class Navbar {
   // sin depender de que el usuario navegue o interactúe en esta para refrescar.
   private readonly authState = inject(AuthState);
   private readonly allowedDashboardRoles = ['Admin', 'Operador'];
-  // Admin y Operador ven los pedidos en /dashboard/pedidos; en la tienda, "Pedidos" es "mis pedidos" del Cliente.
+  // El Operador ve los pedidos en /dashboard/pedidos (y el Admin, el catálogo); en la tienda, "Pedidos" es "mis pedidos" del Cliente.
   private readonly allowedPedidosRoles = ['Cliente'];
   private readonly carrito = inject(CarritoService);
 

@@ -29,8 +29,10 @@ export const authGuard: CanActivateFn = async (route, state) => {
     return true;
   }
 
-  // 5. Si no tiene permisos, lo expulsamos a una zona segura
+  // 5. Si no tiene permisos, lo expulsamos a una zona segura (dentro del dashboard, a su inicio:
+  // Admin y Operador comparten /dashboard pero no sus secciones)
   console.warn(`Acceso denegado a ${state.url}. El usuario no tiene un rol autorizado.`);
-  router.navigate(['/catalogo']);
+  const enDashboard = state.url.startsWith('/dashboard/');
+  router.navigate([enDashboard ? '/dashboard' : '/catalogo']);
   return false;
 };

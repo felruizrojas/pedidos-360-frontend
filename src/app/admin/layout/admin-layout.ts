@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthState } from '../../core/services/auth-state';
 
@@ -21,20 +21,31 @@ import { AuthState } from '../../core/services/auth-state';
                 Inicio
               </a>
             </li>
-            <li>
-              <a routerLink="/dashboard/catalogo" routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
-                ariaCurrentWhenActive="page"
-                class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
-                Catálogo
-              </a>
-            </li>
-            <li>
-              <a routerLink="/dashboard/pedidos" routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
-                ariaCurrentWhenActive="page"
-                class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
-                Pedidos
-              </a>
-            </li>
+            @if (esAdmin()) {
+              <li>
+                <a routerLink="/dashboard/catalogo" routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
+                  ariaCurrentWhenActive="page"
+                  class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
+                  Catálogo
+                </a>
+              </li>
+              <li>
+                <a routerLink="/dashboard/usuarios" routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
+                  ariaCurrentWhenActive="page"
+                  class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
+                  Usuarios
+                </a>
+              </li>
+            }
+            @if (esOperador()) {
+              <li>
+                <a routerLink="/dashboard/pedidos" routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
+                  ariaCurrentWhenActive="page"
+                  class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
+                  Pedidos
+                </a>
+              </li>
+            }
           </ul>
         </div>
 
@@ -62,5 +73,9 @@ import { AuthState } from '../../core/services/auth-state';
   `,
 })
 export class AdminLayout {
-  protected readonly nombre = inject(AuthState).nombre;
+  private readonly authState = inject(AuthState);
+  protected readonly nombre = this.authState.nombre;
+  // Catálogo y usuarios son solo de Admin; pedidos, solo de Operador (los guards de admin.routes.ts hacen cumplir lo mismo).
+  protected readonly esAdmin = computed(() => this.authState.roles().includes('Admin'));
+  protected readonly esOperador = computed(() => this.authState.roles().includes('Operador'));
 }
