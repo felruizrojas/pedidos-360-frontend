@@ -29,7 +29,7 @@ import { ItemEditable, ItemsPedidoEditor } from '../../../shared/components/item
 import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
 
 /** Cada cuánto se vuelve a leer el pedido (estado, historial) mientras se ve el detalle. */
-export const REFRESCO_DETALLE_MS = 10_000;
+export const REFRESCO_DETALLE_MS = 3_000;
 
 const ELIMINADO_MIENTRAS_LO_VEIAS = 'Este pedido fue eliminado y ya no se puede ver ni modificar.';
 

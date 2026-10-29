@@ -14,7 +14,7 @@ import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
 
 const PEDIDOS_POR_PAGINA = 10;
 /** Cada cuánto se vuelve a pedir la página: un pedido nuevo o un cambio de estado aparece sin recargar a mano. */
-export const REFRESCO_LISTA_MS = 5_000;
+export const REFRESCO_LISTA_MS = 3_000;
 
 /**
  * /pedidos (Cliente) y /dashboard/pedidos (Operador): listado paginado en el servidor.
