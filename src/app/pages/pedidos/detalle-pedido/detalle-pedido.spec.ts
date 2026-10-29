@@ -161,6 +161,45 @@ describe('DetallePedido', () => {
     }
   });
 
+  it('si el operador lo cancela mientras el cliente edita, se cierra la edición y se avisa', async () => {
+    vi.useFakeTimers();
+    try {
+      await montar(['Cliente'], pedidoEjemplo());
+      boton('Editar pedido').click();
+      http.expectOne(`${environment.apiBaseUrl}/api/catalog/products`).flush([]);
+      fixture.detectChanges();
+      expect(boton('Guardar cambios')).toBeTruthy();
+
+      vi.advanceTimersByTime(REFRESCO_DETALLE_MS);
+      http.expectOne(url).flush(pedidoEjemplo({ estado: 'CANCELADO', version: 1 }));
+      http.expectOne(`${url}/history`).flush([]);
+      fixture.detectChanges();
+      expect(el().textContent).toContain('Este pedido fue cancelado, así que ya no se puede editar ni cancelar.');
+      expect(boton('Guardar cambios')).toBeFalsy();
+      expect(boton('Editar pedido')).toBeFalsy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('si el operador lo elimina mientras el cliente confirma la cancelación, se cierra y se avisa', async () => {
+    vi.useFakeTimers();
+    try {
+      await montar(['Cliente'], pedidoEjemplo());
+      boton('Cancelar pedido').click();
+      fixture.detectChanges();
+
+      vi.advanceTimersByTime(REFRESCO_DETALLE_MS);
+      http.expectOne(url).flush(pedidoEjemplo({ eliminado: true, version: 1 }));
+      http.expectOne(`${url}/history`).flush([]);
+      fixture.detectChanges();
+      expect(el().textContent).toContain('Este pedido fue eliminado, así que ya no se puede modificar.');
+      expect(boton('Confirmar: Cancelar pedido')).toBeFalsy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('cancelar exige motivo y lo envía como comentario', async () => {
     await montar(['Cliente'], pedidoEjemplo());
     boton('Cancelar pedido').click();

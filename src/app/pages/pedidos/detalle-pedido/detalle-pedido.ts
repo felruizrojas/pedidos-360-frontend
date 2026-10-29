@@ -33,6 +33,13 @@ export const REFRESCO_DETALLE_MS = 3_000;
 
 const ELIMINADO_MIENTRAS_LO_VEIAS = 'Este pedido fue eliminado y ya no se puede ver ni modificar.';
 
+/** Mensaje cuando otro (p. ej. el operador desde el dashboard) eliminó o canceló el pedido; '' en otro caso. */
+function mensajeCambioExterno(pedido: Pedido): string {
+  if (pedido.eliminado) return 'Este pedido fue eliminado, así que ya no se puede modificar.';
+  if (pedido.estado === 'CANCELADO') return 'Este pedido fue cancelado, así que ya no se puede editar ni cancelar.';
+  return '';
+}
+
 /**
  * /pedidos/:id y /dashboard/pedidos/:id: detalle, historial, transiciones según rol y estado, edición en CREADO y borrado (Operador).
  * Los botones son una ayuda: orders es la autoridad y, si responde 409/403, se muestra su mensaje.
@@ -161,22 +168,38 @@ export class DetallePedido implements OnInit {
   }
 
   /**
-   * Refresco en segundo plano (p. ej. el operador cambió el estado mientras el cliente mira el detalle). No corre
-   * mientras se edita, se confirma una acción o hay una petición en curso, para no pisar lo que el usuario hace.
+   * Refresco en segundo plano (p. ej. el operador canceló o eliminó el pedido mientras el cliente mira el detalle).
+   * Corre también con el formulario de edición o una confirmación abierta: si el cambio deja esa acción sin efecto,
+   * se cierra y se avisa en vez de esperar al 409 al guardar. Solo se salta con una petición en curso.
    */
   private refrescar(): void {
-    const ocupado = this.editando() || this.destino() !== null || this.confirmandoEliminar() || this.enviandoEstado()
-      || this.guardandoEdicion() || this.eliminando() || this.cargando();
-    if (document.visibilityState === 'hidden' || ocupado || !this.pedido()) return;
+    const enCurso = this.enviandoEstado() || this.guardandoEdicion() || this.eliminando() || this.cargando();
+    if (document.visibilityState === 'hidden' || enCurso || !this.pedido()) return;
     this.pedidosService.obtenerPedido(this.id).subscribe({
       next: (pedido) => {
-        if (pedido.version !== this.pedido()?.version || pedido.eliminado !== this.pedido()?.eliminado) {
-          this.pedido.set(pedido);
-          this.cargarHistorial();
-        }
+        const actual = this.pedido();
+        if (pedido.version === actual?.version && pedido.eliminado === actual?.eliminado) return;
+        this.pedido.set(pedido);
+        this.cargarHistorial();
+        this.cerrarAccionQueYaNoAplica(pedido);
       },
       error: () => undefined,
     });
+  }
+
+  /** Cierra la edición o la confirmación abierta si el pedido nuevo ya no la permite. */
+  private cerrarAccionQueYaNoAplica(pedido: Pedido): void {
+    const destino = this.destino();
+    const yaNoAplica =
+      (this.editando() && !this.editable()) ||
+      (destino !== null && !this.transiciones().includes(destino)) ||
+      (this.confirmandoEliminar() && !this.eliminable());
+    if (!yaNoAplica) return;
+    this.reiniciarAcciones();
+    this.errorAccion.set(
+      mensajeCambioExterno(pedido) ||
+        `El pedido pasó a "${ETIQUETA_ESTADO[pedido.estado]}" mientras lo veías, así que esa acción ya no está disponible.`,
+    );
   }
 
   protected cargar(): void {
@@ -232,11 +255,8 @@ export class DetallePedido implements OnInit {
     this.pedidosService.obtenerPedido(this.id).subscribe({
       next: (pedido) => {
         this.pedido.set(pedido);
-        if (pedido.eliminado) {
-          this.errorAccion.set('Este pedido fue eliminado, así que ya no se puede modificar.');
-        } else if (pedido.estado === 'CANCELADO') {
-          this.errorAccion.set('Este pedido fue cancelado, así que ya no se puede editar ni cancelar.');
-        }
+        const mensaje = mensajeCambioExterno(pedido);
+        if (mensaje) this.errorAccion.set(mensaje);
         this.cargarHistorial();
       },
       error: (e: unknown) => {
