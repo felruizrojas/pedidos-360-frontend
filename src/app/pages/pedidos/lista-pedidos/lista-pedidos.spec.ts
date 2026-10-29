@@ -5,7 +5,7 @@ import { provideRouter } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { apiErrorInterceptor } from '../../../core/interceptors/api-error.interceptor';
 import { authStateCon, pedidoEjemplo } from '../pedidos-test-utils';
-import { ListaPedidos } from './lista-pedidos';
+import { ListaPedidos, REFRESCO_LISTA_MS } from './lista-pedidos';
 
 describe('ListaPedidos', () => {
   const url = `${environment.apiBaseUrl}/api/orders`;
@@ -51,6 +51,37 @@ describe('ListaPedidos', () => {
     fixture.detectChanges();
     expect(el().querySelector('h1')?.textContent).toContain('Mis pedidos');
     expect(el().querySelector('thead')?.textContent).not.toContain('Cliente');
+  });
+
+  it('muestra cancelados y eliminados diferenciados por estado', async () => {
+    await montar('Cliente');
+    http.expectOne((r) => r.url === url).flush({
+      contenido: [pedidoEjemplo({ id: 16, estado: 'CANCELADO' }), pedidoEjemplo({ id: 17, eliminado: true })],
+      pagina: 0, tamano: 10, totalElementos: 2, totalPaginas: 1,
+    });
+    fixture.detectChanges();
+    const filas = [...el().querySelectorAll('tbody tr')].map((f) => f.textContent ?? '');
+    expect(filas[0]).toContain('#16');
+    expect(filas[0]).toContain('Cancelado');
+    expect(filas[1]).toContain('#17');
+    expect(filas[1]).toContain('Eliminado');
+  });
+
+  it('se actualiza sola: un pedido nuevo aparece sin recargar', async () => {
+    vi.useFakeTimers();
+    try {
+      await montar('Operador');
+      http.expectOne((r) => r.url === url).flush({ contenido: [], pagina: 0, tamano: 10, totalElementos: 0, totalPaginas: 0 });
+      fixture.detectChanges();
+      expect(el().textContent).not.toContain('#15');
+
+      vi.advanceTimersByTime(REFRESCO_LISTA_MS);
+      http.expectOne((r) => r.url === url).flush({ contenido: [pedidoEjemplo()], pagina: 0, tamano: 10, totalElementos: 1, totalPaginas: 1 });
+      fixture.detectChanges();
+      expect(el().textContent).toContain('#15');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('aplica los filtros de estado y fechas', async () => {

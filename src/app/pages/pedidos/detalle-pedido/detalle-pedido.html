@@ -30,7 +30,7 @@
     <header class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex flex-wrap items-center gap-3">
         <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Pedido #{{ p.id }}</h1>
-        <app-estado-pedido-badge [estado]="p.estado" />
+        <app-estado-pedido-badge [estado]="p.estado" [eliminado]="!!p.eliminado" />
       </div>
       <p class="text-sm text-gray-600">Creado el {{ p.creadoEn | date: 'dd-MM-yyyy HH:mm' }}</p>
     </header>
@@ -174,6 +174,15 @@
               <dt class="text-gray-500">Dirección de entrega</dt>
               <dd class="font-medium text-gray-900 break-words">{{ p.direccionEntrega }}</dd>
             </div>
+            @if (p.eliminado) {
+              <div class="sm:col-span-2">
+                <dt class="text-gray-500">Eliminado</dt>
+                <dd class="font-medium text-gray-900">
+                  {{ p.eliminadoEn | date: 'dd-MM-yyyy HH:mm' }}@if (p.eliminadoPor) { por {{ p.eliminadoPor }}}.
+                  Solo lectura: ya no se puede modificar.
+                </dd>
+              </div>
+            }
             @if (p.motivoCancelacion) {
               <div class="sm:col-span-2">
                 <dt class="text-gray-500">Motivo de cancelación</dt>
@@ -213,11 +222,6 @@
           </div>
         }
       </section>
-
-      <!-- Mensajería por RabbitMQ: dashboard del operador -->
-      @if (enDashboard && !soloCliente()) {
-        <app-mensajeria-pedido [pedidoId]="p.id" />
-      }
 
       <!-- Historial -->
       <section aria-labelledby="titulo-historial" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">

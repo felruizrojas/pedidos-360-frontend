@@ -4,12 +4,11 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthState } from '../../../core/services/auth-state';
 import { CarritoService } from '../../../core/services/carrito';
 import { puedeCrearPedidos } from '../../../core/utils/estados-pedido';
-import { Notificaciones } from '../notificaciones/notificaciones';
 
 @Component({
   selector: 'navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, Notificaciones],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })

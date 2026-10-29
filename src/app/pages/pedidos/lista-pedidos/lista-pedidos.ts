@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiError } from '../../../core/models/api-error.model';
@@ -13,6 +13,8 @@ import { Pagination } from '../../../shared/components/pagination/pagination';
 import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
 
 const PEDIDOS_POR_PAGINA = 10;
+/** Cada cuánto se vuelve a pedir la página: un pedido nuevo o un cambio de estado aparece sin recargar a mano. */
+export const REFRESCO_LISTA_MS = 5_000;
 
 /**
  * /pedidos (Cliente) y /dashboard/pedidos (Operador): listado paginado en el servidor.
@@ -30,9 +32,9 @@ export class ListaPedidos implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly destroyRef = inject(DestroyRef);
 
-  /** Sin CANCELADO: orders nunca lista pedidos cancelados (ni eliminados). */
-  protected readonly ESTADOS = ESTADOS_PEDIDO.filter((e) => e !== 'CANCELADO');
+  protected readonly ESTADOS = ESTADOS_PEDIDO;
   protected readonly ETIQUETA_ESTADO = ETIQUETA_ESTADO;
   protected readonly tamanoPagina = PEDIDOS_POR_PAGINA;
 
@@ -65,6 +67,22 @@ export class ListaPedidos implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+    const temporizador = setInterval(() => this.refrescar(), REFRESCO_LISTA_MS);
+    this.destroyRef.onDestroy(() => clearInterval(temporizador));
+  }
+
+  /** Refresco en segundo plano: sin "Cargando…" y sin mostrar errores pasajeros (la próxima vuelta reintenta). */
+  private refrescar(): void {
+    if (document.visibilityState === 'hidden' || this.cargando()) return;
+    this.pedidosService
+      .listarPedidos({
+        estado: this.estado() || null,
+        desde: this.desde() || null,
+        hasta: this.hasta() || null,
+        page: this.pagina() - 1,
+        size: PEDIDOS_POR_PAGINA,
+      })
+      .subscribe({ next: (pagina) => this.resultado.set(pagina), error: () => undefined });
   }
 
   protected cargar(): void {

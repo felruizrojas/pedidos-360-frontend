@@ -26,8 +26,12 @@ import {
 } from '../../../core/utils/estados-pedido';
 import { EstadoPedidoBadge } from '../../../shared/components/estado-pedido-badge/estado-pedido-badge';
 import { ItemEditable, ItemsPedidoEditor } from '../../../shared/components/items-pedido-editor/items-pedido-editor';
-import { MensajeriaPedido } from '../mensajeria-pedido/mensajeria-pedido';
 import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
+
+/** Cada cuánto se vuelve a leer el pedido (estado, historial) mientras se ve el detalle. */
+export const REFRESCO_DETALLE_MS = 10_000;
+
+const ELIMINADO_MIENTRAS_LO_VEIAS = 'Este pedido fue eliminado y ya no se puede ver ni modificar.';
 
 /**
  * /pedidos/:id y /dashboard/pedidos/:id: detalle, historial, transiciones según rol y estado, edición en CREADO y borrado (Operador).
@@ -43,7 +47,6 @@ import { aApiError, mensajeErrorPedido } from '../pedidos-errores';
     ReactiveFormsModule,
     EstadoPedidoBadge,
     ItemsPedidoEditor,
-    MensajeriaPedido,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './detalle-pedido.html',
@@ -73,7 +76,12 @@ export class DetallePedido implements OnInit {
   protected readonly mensajeErrorCarga = computed(() => {
     const e = this.errorCarga();
     if (!e) return '';
-    return e.status === 404 ? 'El pedido no existe o no tienes acceso a él.' : mensajeErrorPedido(e, 'ver este pedido');
+    if (e.status === 404) {
+      return e.mensaje === ELIMINADO_MIENTRAS_LO_VEIAS
+        ? ELIMINADO_MIENTRAS_LO_VEIAS
+        : 'El pedido no existe, fue eliminado o no tienes acceso a él.';
+    }
+    return mensajeErrorPedido(e, 'ver este pedido');
   });
 
   protected readonly historial = signal<HistorialEstado[]>([]);
@@ -87,15 +95,15 @@ export class DetallePedido implements OnInit {
   protected readonly soloCliente = computed(() => esSoloCliente(this.roles()));
   protected readonly transiciones = computed(() => {
     const p = this.pedido();
-    return p ? transicionesPermitidas(p.estado, this.roles()) : [];
+    return p && !p.eliminado ? transicionesPermitidas(p.estado, this.roles()) : [];
   });
   protected readonly editable = computed(() => {
     const p = this.pedido();
-    return !!p && puedeEditar(p.estado, this.roles());
+    return !!p && !p.eliminado && puedeEditar(p.estado, this.roles());
   });
   protected readonly eliminable = computed(() => {
     const p = this.pedido();
-    return !!p && puedeEliminar(p.estado, this.roles());
+    return !!p && !p.eliminado && puedeEliminar(p.estado, this.roles());
   });
 
   // --- Cambio de estado (confirmación en línea con comentario) ---
@@ -148,6 +156,27 @@ export class DetallePedido implements OnInit {
       this.reiniciarAcciones();
       this.cargar();
     });
+    const temporizador = setInterval(() => this.refrescar(), REFRESCO_DETALLE_MS);
+    this.destroyRef.onDestroy(() => clearInterval(temporizador));
+  }
+
+  /**
+   * Refresco en segundo plano (p. ej. el operador cambió el estado mientras el cliente mira el detalle). No corre
+   * mientras se edita, se confirma una acción o hay una petición en curso, para no pisar lo que el usuario hace.
+   */
+  private refrescar(): void {
+    const ocupado = this.editando() || this.destino() !== null || this.confirmandoEliminar() || this.enviandoEstado()
+      || this.guardandoEdicion() || this.eliminando() || this.cargando();
+    if (document.visibilityState === 'hidden' || ocupado || !this.pedido()) return;
+    this.pedidosService.obtenerPedido(this.id).subscribe({
+      next: (pedido) => {
+        if (pedido.version !== this.pedido()?.version || pedido.eliminado !== this.pedido()?.eliminado) {
+          this.pedido.set(pedido);
+          this.cargarHistorial();
+        }
+      },
+      error: () => undefined,
+    });
   }
 
   protected cargar(): void {
@@ -192,6 +221,34 @@ export class DetallePedido implements OnInit {
     this.confirmandoEliminar.set(false);
   }
 
+  /**
+   * 409/404 en una acción: el pedido cambió mientras se veía (p. ej. el operador lo canceló o lo eliminó desde el
+   * dashboard). Se vuelve a leer para que desaparezcan los botones que ya no aplican; si ya no existe, se avisa.
+   */
+  private refrescarSiCambio(error: ApiError): void {
+    if (error.status !== 409 && error.status !== 404) return;
+    this.editando.set(false);
+    this.destino.set(null);
+    this.pedidosService.obtenerPedido(this.id).subscribe({
+      next: (pedido) => {
+        this.pedido.set(pedido);
+        if (pedido.eliminado) {
+          this.errorAccion.set('Este pedido fue eliminado, así que ya no se puede modificar.');
+        } else if (pedido.estado === 'CANCELADO') {
+          this.errorAccion.set('Este pedido fue cancelado, así que ya no se puede editar ni cancelar.');
+        }
+        this.cargarHistorial();
+      },
+      error: (e: unknown) => {
+        const apiError = aApiError(e);
+        if (apiError.status === 404) {
+          this.pedido.set(null);
+          this.errorCarga.set({ status: 404, mensaje: ELIMINADO_MIENTRAS_LO_VEIAS });
+        }
+      },
+    });
+  }
+
   // --- Cambio de estado ---
 
   protected elegirDestino(estado: EstadoPedido): void {
@@ -221,16 +278,14 @@ export class DetallePedido implements OnInit {
           this.pedido.set(pedido);
           this.enviandoEstado.set(false);
           this.destino.set(null);
-          this.mensajeExito.set(
-            pedido.estado === 'CANCELADO'
-              ? 'El pedido fue cancelado y ya no aparecerá en la lista de pedidos.'
-              : `El pedido pasó a "${ETIQUETA_ESTADO[pedido.estado]}".`,
-          );
+          this.mensajeExito.set(`El pedido pasó a "${ETIQUETA_ESTADO[pedido.estado]}".`);
           this.cargarHistorial();
         },
         error: (e: unknown) => {
+          const apiError = aApiError(e);
           this.enviandoEstado.set(false);
-          this.errorAccion.set(mensajeErrorPedido(aApiError(e), 'cambiar el estado de este pedido'));
+          this.errorAccion.set(mensajeErrorPedido(apiError, 'cambiar el estado de este pedido'));
+          this.refrescarSiCambio(apiError);
         },
       });
   }
@@ -318,6 +373,7 @@ export class DetallePedido implements OnInit {
           this.erroresCampo.set(apiError.detalles);
         }
         this.errorAccion.set(mensajeErrorPedido(apiError, 'editar este pedido'));
+        this.refrescarSiCambio(apiError);
       },
     });
   }
@@ -338,9 +394,11 @@ export class DetallePedido implements OnInit {
         void this.router.navigate([this.basePedidos]);
       },
       error: (e: unknown) => {
+        const apiError = aApiError(e);
         this.eliminando.set(false);
         this.confirmandoEliminar.set(false);
-        this.errorAccion.set(mensajeErrorPedido(aApiError(e), 'eliminar este pedido'));
+        this.errorAccion.set(mensajeErrorPedido(apiError, 'eliminar este pedido'));
+        this.refrescarSiCambio(apiError);
       },
     });
   }

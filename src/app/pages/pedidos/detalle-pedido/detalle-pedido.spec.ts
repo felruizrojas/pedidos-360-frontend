@@ -7,7 +7,7 @@ import { environment } from '../../../../environments/environment';
 import { apiErrorInterceptor } from '../../../core/interceptors/api-error.interceptor';
 import { Pedido } from '../../../core/models/pedido.model';
 import { authStateCon, pedidoEjemplo } from '../pedidos-test-utils';
-import { DetallePedido } from './detalle-pedido';
+import { DetallePedido, REFRESCO_DETALLE_MS } from './detalle-pedido';
 
 describe('DetallePedido', () => {
   const url = `${environment.apiBaseUrl}/api/orders/15`;
@@ -95,9 +95,70 @@ describe('DetallePedido', () => {
         detalles: { productoId: 1, solicitado: 2, disponible: 1 } },
       { status: 409, statusText: 'Conflict' },
     );
+    // Tras un 409 se vuelve a leer el pedido por si cambió mientras se veía.
+    http.expectOne(url).flush(pedidoEjemplo());
+    http.expectOne(`${url}/history`).flush([]);
     fixture.detectChanges();
     const alerta = el().querySelector('[role="alert"]');
     expect(alerta?.textContent).toContain('Stock insuficiente para "Pan Amasado"');
+  });
+
+  it('si el operador ya lo canceló, el cliente ve el estado nuevo y sin botones', async () => {
+    await montar(['Cliente'], pedidoEjemplo());
+    boton('Cancelar pedido').click();
+    fixture.detectChanges();
+    const motivo = el().querySelector<HTMLTextAreaElement>('#comentario')!;
+    motivo.value = 'Ya no lo quiero';
+    motivo.dispatchEvent(new Event('input'));
+    boton('Confirmar: Cancelar pedido').click();
+    http.expectOne(`${url}/status`).flush(
+      { status: 409, mensaje: 'Un cliente solo puede cancelar su pedido mientras está en CREADO (estado actual: CANCELADO)' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    http.expectOne(url).flush(pedidoEjemplo({ estado: 'CANCELADO', motivoCancelacion: 'Sin stock' }));
+    http.expectOne(`${url}/history`).flush([]);
+    fixture.detectChanges();
+    expect(el().textContent).toContain('Este pedido fue cancelado, así que ya no se puede editar ni cancelar.');
+    expect(boton('Cancelar pedido')).toBeFalsy();
+  });
+
+  it('si el operador ya lo eliminó, el cliente lo ve como Eliminado y sin botones', async () => {
+    await montar(['Cliente'], pedidoEjemplo());
+    boton('Cancelar pedido').click();
+    fixture.detectChanges();
+    const motivo = el().querySelector<HTMLTextAreaElement>('#comentario')!;
+    motivo.value = 'Ya no lo quiero';
+    motivo.dispatchEvent(new Event('input'));
+    boton('Confirmar: Cancelar pedido').click();
+    http.expectOne(`${url}/status`).flush(
+      { status: 409, mensaje: 'El pedido 15 fue eliminado y ya no se puede modificar' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    http.expectOne(url).flush(
+      pedidoEjemplo({ eliminado: true, eliminadoEn: '2026-10-20T16:00:00Z', eliminadoPor: 'Olga Operadora (Operador)' }),
+    );
+    http.expectOne(`${url}/history`).flush([]);
+    fixture.detectChanges();
+    expect(el().textContent).toContain('Este pedido fue eliminado, así que ya no se puede modificar.');
+    expect(el().textContent).toContain('Eliminado');
+    expect(el().textContent).toContain('por Olga Operadora (Operador)');
+    expect(boton('Cancelar pedido')).toBeFalsy();
+    expect(boton('Editar pedido')).toBeFalsy();
+  });
+
+  it('se actualiza solo cuando el pedido cambia mientras se mira', async () => {
+    vi.useFakeTimers();
+    try {
+      await montar(['Cliente'], pedidoEjemplo());
+      vi.advanceTimersByTime(REFRESCO_DETALLE_MS);
+      http.expectOne(url).flush(pedidoEjemplo({ estado: 'ACEPTADO', version: 1 }));
+      http.expectOne(`${url}/history`).flush([]);
+      fixture.detectChanges();
+      expect(el().querySelector('h1')?.parentElement?.textContent).toContain('Aceptado');
+      expect(boton('Cancelar pedido')).toBeFalsy();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('cancelar exige motivo y lo envía como comentario', async () => {
@@ -119,7 +180,7 @@ describe('DetallePedido', () => {
     fixture.detectChanges();
     http.expectOne(`${url}/history`).flush([]);
     fixture.detectChanges();
-    expect(el().textContent).toContain('El pedido fue cancelado y ya no aparecerá en la lista de pedidos.');
+    expect(el().textContent).toContain('El pedido pasó a "Cancelado"');
   });
 
   it('pedido inexistente: mensaje de no encontrado', async () => {
@@ -138,6 +199,6 @@ describe('DetallePedido', () => {
     fixture.detectChanges();
     http.expectOne(`${environment.apiBaseUrl}/api/orders/99`).flush({ mensaje: 'Pedido 99 no encontrado' }, { status: 404, statusText: 'x' });
     fixture.detectChanges();
-    expect(el().querySelector('[role="alert"]')?.textContent).toContain('no existe o no tienes acceso');
+    expect(el().querySelector('[role="alert"]')?.textContent).toContain('no existe, fue eliminado o no tienes acceso');
   });
 });
