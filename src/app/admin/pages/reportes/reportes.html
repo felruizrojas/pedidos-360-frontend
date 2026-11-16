@@ -1,0 +1,103 @@
+<div class="max-w-7xl space-y-6">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div class="space-y-1">
+      <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Reportes</h1>
+      <p class="text-gray-600">KPIs calculados por streaming (Kafka) a partir de los pedidos. Solo lectura.</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm" role="group" aria-label="Rango del reporte">
+        @for (r of RANGOS; track r.valor) {
+          <button type="button" (click)="cambiarRango(r.valor)" [attr.aria-pressed]="rango() === r.valor"
+            class="px-3 py-1.5 text-sm rounded-lg cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600"
+            [class]="rango() === r.valor ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-gray-50'">
+            {{ r.etiqueta }}
+          </button>
+        }
+      </div>
+      <button type="button" (click)="alternarPausa()" [attr.aria-pressed]="pausado()"
+        class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">
+        {{ pausado() ? 'Reanudar' : 'Pausar' }}
+      </button>
+    </div>
+  </div>
+
+  <p class="text-sm text-gray-500" role="status" aria-live="polite">
+    @if (estadoActualizacion(); as texto) {
+      {{ texto }}@if (pausado()) { · <span class="font-medium text-amber-700">actualización automática en pausa</span> }
+    } @else if (kpis().cargando) {
+      Cargando reportes…
+    }
+  </p>
+
+  <!-- KPIs -->
+  <section aria-labelledby="titulo-kpis">
+    <h2 id="titulo-kpis" class="sr-only">Indicadores</h2>
+    @if (kpis().error; as err) {
+      <div role="alert" class="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 flex flex-wrap items-center gap-3">
+        <span>{{ mensajeError(err) }}</span>
+        <button type="button" (click)="recargar()" class="font-semibold underline cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">Reintentar</button>
+      </div>
+    } @else if (kpis().datos) {
+      <ul class="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5">
+        @for (t of tarjetas(); track t.titulo) {
+          <li class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4" [attr.data-kpi]="t.titulo">
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t.titulo }}</p>
+            <p class="mt-1 text-2xl font-extrabold text-gray-900 tabular-nums">{{ t.valor }}</p>
+            @if (t.ayuda) {
+              <p class="mt-1 text-xs text-gray-500">{{ t.ayuda }}</p>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="text-gray-600" role="status">Cargando indicadores…</p>
+    }
+  </section>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <section aria-labelledby="titulo-ventas" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:col-span-2" data-bloque="ventas">
+      <h2 id="titulo-ventas" class="text-lg font-bold text-gray-900 mb-1">Ventas</h2>
+      @if (ventas().error; as err) {
+        <p role="alert" class="p-3 rounded-xl bg-red-50 text-sm text-red-700">{{ mensajeError(err) }}</p>
+      } @else if (ventas().datos; as d) {
+        <app-sales-chart [datos]="d" />
+      } @else {
+        <p class="text-sm text-gray-500" role="status">Cargando…</p>
+      }
+    </section>
+
+    <section aria-labelledby="titulo-lead" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5" data-bloque="lead-time">
+      <h2 id="titulo-lead" class="text-lg font-bold text-gray-900 mb-1">Lead time</h2>
+      @if (leadTime().error; as err) {
+        <p role="alert" class="p-3 rounded-xl bg-red-50 text-sm text-red-700">{{ mensajeError(err) }}</p>
+      } @else if (leadTime().datos; as d) {
+        <app-lead-time-chart [datos]="d" />
+      } @else {
+        <p class="text-sm text-gray-500" role="status">Cargando…</p>
+      }
+    </section>
+
+    <section aria-labelledby="titulo-top" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5" data-bloque="top">
+      <h2 id="titulo-top" class="text-lg font-bold text-gray-900 mb-1">Productos más vendidos</h2>
+      @if (top().error; as err) {
+        <p role="alert" class="p-3 rounded-xl bg-red-50 text-sm text-red-700">{{ mensajeError(err) }}</p>
+      } @else if (top().datos; as d) {
+        <app-top-products-chart [datos]="d" (ordenCambio)="cambiarOrden($event)" />
+      } @else {
+        <p class="text-sm text-gray-500" role="status">Cargando…</p>
+      }
+    </section>
+
+    <section aria-labelledby="titulo-activos" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:col-span-2" data-bloque="activos">
+      <h2 id="titulo-activos" class="text-lg font-bold text-gray-900 mb-1">Estados activos <span class="text-sm font-normal text-gray-500">(ahora)</span></h2>
+      @if (activos().error; as err) {
+        <p role="alert" class="p-3 rounded-xl bg-red-50 text-sm text-red-700">{{ mensajeError(err) }}</p>
+      } @else if (activos().datos; as d) {
+        <app-estados-activos [datos]="d" />
+      } @else {
+        <p class="text-sm text-gray-500" role="status">Cargando…</p>
+      }
+    </section>
+  </div>
+</div>

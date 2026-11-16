@@ -1,0 +1,174 @@
+<div class="space-y-5">
+  <!-- Resumen del rango -->
+  @if (resumen(); as r) {
+    <div class="grid gap-3 sm:grid-cols-3" data-bloque="resumen">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Eventos {{ filtros().desde || filtros().hasta ? 'del rango' : 'de las últimas 24 h' }}</p>
+        <p class="mt-1 text-2xl font-extrabold text-gray-900 tabular-nums">{{ r.total }}</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Por acción</p>
+        <ul class="mt-2 space-y-1 text-sm">
+          @for (c of r.porAccion; track c.clave) {
+            <li class="flex justify-between gap-2"><span class="text-gray-700">{{ etiqueta(c.clave) }}</span><span class="font-semibold tabular-nums">{{ c.cantidad }}</span></li>
+          } @empty {
+            <li class="text-gray-500">Sin eventos</li>
+          }
+        </ul>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Usuarios más activos</p>
+        <ul class="mt-2 space-y-1 text-sm">
+          @for (a of r.topActores; track a.id) {
+            <li class="flex justify-between gap-2"><span class="text-gray-700 truncate">{{ a.nombre || a.id }}</span><span class="font-semibold tabular-nums">{{ a.cantidad }}</span></li>
+          } @empty {
+            <li class="text-gray-500">Sin eventos</li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+
+  <!-- Filtros -->
+  <form [formGroup]="form" (ngSubmit)="buscar()" aria-label="Filtros de eventos"
+    class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 grid gap-4 md:grid-cols-4 items-end">
+    <div>
+      <label for="filtro-usuario" class="block text-sm font-medium text-gray-700">Usuario</label>
+      <input id="filtro-usuario" type="text" formControlName="usuario" placeholder="Nombre, correo o id"
+        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+    </div>
+    <div>
+      <label for="filtro-desde" class="block text-sm font-medium text-gray-700">Desde</label>
+      <input id="filtro-desde" type="date" formControlName="desde"
+        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+    </div>
+    <div>
+      <label for="filtro-hasta" class="block text-sm font-medium text-gray-700">Hasta</label>
+      <input id="filtro-hasta" type="date" formControlName="hasta"
+        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+    </div>
+    <div>
+      <label for="filtro-numero" class="block text-sm font-medium text-gray-700">Nº de pedido</label>
+      <input id="filtro-numero" type="text" inputmode="numeric" formControlName="numero"
+        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+    </div>
+    <fieldset class="md:col-span-3">
+      <legend class="block text-sm font-medium text-gray-700">Tipo de evento</legend>
+      <div class="mt-1 flex flex-wrap gap-x-4 gap-y-2">
+        @for (t of tipos(); track t.accion) {
+          <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox" [checked]="form.controls.acciones.value.includes(t.accion)" (change)="alternarAccion(t.accion)"
+              [attr.data-accion]="t.accion" class="size-4 rounded border-gray-300 text-indigo-600 focus-visible:outline-2 focus-visible:outline-indigo-600" />
+            {{ etiqueta(t.accion) }} <span class="text-gray-500">({{ t.cantidad }})</span>
+          </label>
+        } @empty {
+          <span class="text-sm text-gray-500">Aún no hay eventos registrados.</span>
+        }
+      </div>
+    </fieldset>
+    <div class="flex gap-2">
+      <button type="submit"
+        class="flex-1 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+        Buscar
+      </button>
+      <button type="button" (click)="limpiar()"
+        class="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">
+        Limpiar
+      </button>
+    </div>
+  </form>
+
+  <!-- Resultados -->
+  @if (eventos().error; as err) {
+    <p role="alert" class="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700">{{ mensaje(err) }}</p>
+  } @else if (eventos().datos; as pagina) {
+    <p class="text-sm text-gray-600" role="status">{{ pagina.totalElementos }} {{ pagina.totalElementos === 1 ? 'evento' : 'eventos' }}</p>
+    @if (pagina.contenido.length === 0) {
+      <p class="text-center text-gray-600 py-6">No hay eventos que coincidan con los filtros.</p>
+    } @else {
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+        <table class="w-full text-sm">
+          <caption class="sr-only">Eventos de auditoría</caption>
+          <thead class="bg-gray-50 text-left text-gray-700">
+            <tr>
+              <th scope="col" class="px-4 py-3 font-semibold">Fecha y hora</th>
+              <th scope="col" class="px-4 py-3 font-semibold">Acción</th>
+              <th scope="col" class="px-4 py-3 font-semibold">Quién</th>
+              <th scope="col" class="px-4 py-3 font-semibold">Qué</th>
+              <th scope="col" class="px-4 py-3 font-semibold">Desde dónde</th>
+              <th scope="col" class="px-4 py-3"><span class="sr-only">Detalle</span></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (e of pagina.contenido; track e.eventId) {
+              <tr class="hover:bg-gray-50 cursor-pointer" (click)="abrir(e.eventId)" [class.bg-indigo-50]="seleccionado() === e.eventId">
+                <td class="px-4 py-3 text-gray-700 whitespace-nowrap">{{ fecha(e.cuando.ocurridoEn) }}</td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset whitespace-nowrap" [class]="clases(e.accion)">
+                    {{ etiqueta(e.accion) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="font-medium text-gray-900">{{ e.quien.nombre || e.quien.id || '—' }}</span>
+                  @if (e.quien.rol) { <span class="block text-xs text-gray-500">{{ e.quien.rol }}</span> }
+                </td>
+                <td class="px-4 py-3 text-gray-700">{{ e.que.descripcion || '—' }}</td>
+                <td class="px-4 py-3 text-gray-700 whitespace-nowrap">{{ e.donde.servicio || '—' }} · {{ e.donde.ip || '—' }}</td>
+                <td class="px-4 py-3 text-right">
+                  <button type="button" (click)="$event.stopPropagation(); abrir(e.eventId)"
+                    [attr.aria-expanded]="seleccionado() === e.eventId" aria-controls="detalle-evento"
+                    class="font-medium text-indigo-700 px-3 py-1 rounded-lg hover:bg-indigo-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">
+                    {{ seleccionado() === e.eventId ? 'Ocultar' : 'Ver detalle' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination [paginaActual]="pagina.pagina + 1" [totalItems]="pagina.totalElementos" [tamanoPagina]="tamanoPagina"
+        (paginaCambiada)="irAPagina($event)" />
+    }
+  } @else {
+    <p class="text-center text-gray-600" role="status">Cargando eventos…</p>
+  }
+
+  <!-- Detalle -->
+  @if (seleccionado()) {
+    <section id="detalle-evento" aria-label="Detalle del evento" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">
+      @if (detalle().error; as err) {
+        <p role="alert" class="text-sm text-red-700">{{ mensaje(err) }}</p>
+      } @else if (detalle().datos; as d) {
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-lg font-bold text-gray-900">{{ etiqueta(d.accion) }} · {{ d.entidad.tipo }} #{{ d.entidad.id }}</h2>
+          @if (d.entidad.tipo === 'PEDIDO') {
+            <button type="button" (click)="verTimeline.emit(d.entidad.id)"
+              class="text-sm font-medium text-indigo-700 px-3 py-1 rounded-lg hover:bg-indigo-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">
+              Ver timeline del pedido
+            </button>
+          }
+        </div>
+        <dl class="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+          <div><dt class="text-gray-500">Quién</dt><dd class="text-gray-900">{{ d.quien.nombre || '—' }} ({{ d.quien.rol || 'sin rol' }})<span class="block text-gray-600 break-all">{{ d.quien.email || d.quien.id }}</span></dd></div>
+          <div><dt class="text-gray-500">Qué</dt><dd class="text-gray-900">{{ d.que.descripcion || '—' }}@if (d.que.comentario) {<span class="block text-gray-600">“{{ d.que.comentario }}”</span>}</dd></div>
+          <div><dt class="text-gray-500">Cuándo</dt><dd class="text-gray-900">{{ fecha(d.cuando.ocurridoEn) }}<span class="block text-gray-600">registrado {{ fecha(d.cuando.recibidoEn) }}</span></dd></div>
+          <div><dt class="text-gray-500">Desde dónde</dt><dd class="text-gray-900">{{ d.donde.servicio || '—' }} · {{ d.donde.ip || '—' }}<span class="block text-gray-600 break-all">{{ d.donde.userAgent || '' }}</span></dd></div>
+          <div class="sm:col-span-2"><dt class="text-gray-500">correlationId (X-Request-Id)</dt><dd class="font-mono text-xs text-gray-900 break-all">{{ d.correlationId || '—' }}</dd></div>
+          <div class="sm:col-span-2"><dt class="text-gray-500">Kafka</dt><dd class="font-mono text-xs text-gray-900">{{ d.kafka.topic }} · partición {{ d.kafka.particion }} · offset {{ d.kafka.offset }}</dd></div>
+        </dl>
+        <div>
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-gray-700">Mensaje original (payload)</h3>
+            <button type="button" (click)="copiar(json(d.payload))"
+              class="text-xs font-medium text-indigo-700 px-2 py-1 rounded-lg hover:bg-indigo-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600">
+              {{ copiado() ? 'Copiado' : 'Copiar' }}
+            </button>
+          </div>
+          <pre class="mt-2 max-h-80 overflow-auto rounded-xl bg-gray-900 text-gray-100 text-xs p-4">{{ json(d.payload) }}</pre>
+        </div>
+      } @else {
+        <p class="text-sm text-gray-600" role="status">Cargando detalle…</p>
+      }
+    </section>
+  }
+</div>

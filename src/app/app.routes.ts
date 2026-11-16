@@ -5,6 +5,7 @@ import { Login } from './pages/login/login';
 import { authGuard } from './core/guards/auth-guard';
 // 1. Nueva importación de tu componente puente
 import { AuthRedirect } from './shared/components/auth-redirect/auth-redirect';
+import { ROLES_DASHBOARD } from './admin/admin-menu';
 
 export const routes: Routes = [
   // Ruta por defecto que redirige a la bienvenida
@@ -46,13 +47,13 @@ export const routes: Routes = [
     ],
   },
 
-  // 🔒 Dashboard: el Cliente no entra. Dentro, catálogo y usuarios son solo de Admin y pedidos solo de Operador
-  // (cada sección tiene su propio guard en admin.routes.ts).
-  { 
-    path: 'dashboard', 
+  // 🔒 Dashboard (Admin, Operador y Auditor; el Cliente no entra). Dentro, cada sección tiene su propio guard con los
+  // roles de su entrada en admin-menu.ts (catálogo, usuarios y reportes Admin; pedidos Operador).
+  {
+    path: 'dashboard',
     loadChildren: () => import('./admin/admin.routes').then((m) => m.adminRoutes),
-    canActivate: [authGuard], 
-    data: { roles: ['Admin', 'Operador'] } 
+    canActivate: [authGuard],
+    data: { roles: [...ROLES_DASHBOARD] }
   },
 
   // 🔄 Comodín para redirigir cualquier URL rota o inexistente a inicio

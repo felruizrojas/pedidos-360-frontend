@@ -1,0 +1,96 @@
+<div class="max-w-5xl space-y-6">
+  <div class="space-y-2">
+    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">
+      Bienvenido@if (nombre) {, {{ nombre }}}
+    </h1>
+    <p class="text-gray-600">Este es el panel de administración de Pedidos 360.</p>
+  </div>
+
+  <!-- Admin: KPIs globales de hoy -->
+  @if (esAdmin() && kpis(); as k) {
+    <section aria-labelledby="titulo-kpis-hoy" data-bloque="kpis">
+      <div class="flex items-center justify-between mb-2">
+        <h2 id="titulo-kpis-hoy" class="text-lg font-bold text-gray-900">Hoy</h2>
+        <a routerLink="/dashboard/reportes" class="text-sm font-medium text-indigo-700 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-600">Ver reportes →</a>
+      </div>
+      @if (k.fallo) {
+        <p class="text-sm text-gray-500" role="status">No se pudieron cargar los indicadores de hoy (la reportería no está disponible).</p>
+      } @else {
+        <ul class="grid gap-3 grid-cols-2 lg:grid-cols-4">
+          @for (t of tarjetasKpi(); track t.titulo) {
+            <li class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4" [attr.data-kpi]="t.titulo">
+              <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t.titulo }}</p>
+              <p class="mt-1 text-2xl font-extrabold text-gray-900 tabular-nums">{{ t.valor }}</p>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  <!-- Operador: pedidos pendientes y en curso -->
+  @if (esOperador() && pendientes(); as p) {
+    <section aria-labelledby="titulo-pedidos" data-bloque="pedidos">
+      <h2 id="titulo-pedidos" class="text-lg font-bold text-gray-900 mb-2">Pedidos en curso y pendientes</h2>
+      @if (p.fallo) {
+        <p class="text-sm text-gray-500" role="status">No se pudieron cargar los pedidos.</p>
+      } @else {
+        <div class="grid gap-4 md:grid-cols-2">
+          @for (g of gruposOperador(); track g.id) {
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4" [attr.data-grupo]="g.id">
+              <h3 class="font-semibold text-gray-900">{{ g.titulo }} <span class="ml-1 text-indigo-700 tabular-nums">({{ g.grupo?.total ?? 0 }})</span></h3>
+              <ul class="mt-2 divide-y divide-gray-100">
+                @for (pedido of g.grupo?.pedidos ?? []; track pedido.id) {
+                  <li>
+                    <a [routerLink]="['/dashboard/pedidos', pedido.id]"
+                      class="flex flex-wrap items-center justify-between gap-2 py-2 text-sm hover:bg-gray-50 rounded-lg px-2 focus-visible:outline-2 focus-visible:outline-indigo-600">
+                      <span><span class="font-semibold text-gray-900">#{{ pedido.id }}</span> · {{ pedido.clienteNombre }}</span>
+                      <span class="flex items-center gap-2">
+                        <span class="text-gray-700 tabular-nums">{{ clp(pedido.total) }}</span>
+                        <app-estado-pedido-badge [estado]="pedido.estado" />
+                      </span>
+                    </a>
+                  </li>
+                } @empty {
+                  <li class="py-2 text-sm text-gray-500">No hay pedidos.</li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- Admin y Auditor: auditoría de las últimas 24 h -->
+  @if (veAuditoria() && resumen(); as r) {
+    <section aria-labelledby="titulo-auditoria" data-bloque="auditoria"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <div class="flex items-center justify-between mb-2">
+        <h2 id="titulo-auditoria" class="text-lg font-bold text-gray-900">Auditoría · últimas 24 h</h2>
+        <a routerLink="/dashboard/auditoria" class="text-sm font-medium text-indigo-700 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-600">Ver auditoría →</a>
+      </div>
+      @if (r.fallo) {
+        <p class="text-sm text-gray-500" role="status">No se pudo cargar el resumen (la auditoría no está disponible).</p>
+      } @else if (r.datos; as res) {
+        <p class="text-3xl font-extrabold text-gray-900 tabular-nums">{{ res.total }} <span class="text-base font-medium text-gray-600">{{ res.total === 1 ? 'evento' : 'eventos' }}</span></p>
+        <ul class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700">
+          @for (c of res.porAccion.slice(0, 4); track c.clave) {
+            <li>{{ etiquetaAccion(c.clave) }}: <strong class="tabular-nums">{{ c.cantidad }}</strong></li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  <!-- Accesos a cada sección del rol -->
+  <div class="grid gap-4 sm:grid-cols-2">
+    @for (entrada of secciones(); track entrada.segmento) {
+      <a [routerLink]="ruta(entrada)"
+        class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow focus-visible:outline-2 focus-visible:outline-indigo-600">
+        <h2 class="text-lg font-bold text-gray-900">{{ entrada.etiqueta }}</h2>
+        <p class="text-sm text-gray-600">{{ entrada.descripcion }}</p>
+      </a>
+    }
+  </div>
+</div>

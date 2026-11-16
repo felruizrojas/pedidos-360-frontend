@@ -1,8 +1,11 @@
 import { AccountInfo, IPublicClientApplication } from '@azure/msal-browser';
 import { environment } from '../../../environments/environment';
 
-/** Roles que el front reconoce (deben coincidir con los App roles de la API en Azure). */
-export type Rol = 'Admin' | 'Operador' | 'Cliente';
+/**
+ * Roles que el front reconoce (deben coincidir con los App roles de la API en Azure). Auditor es el actor del módulo
+ * de Auditoría del PDF: solo ve Inicio y Auditoría en el dashboard. Si el App role no existe en Entra, Admin basta.
+ */
+export type Rol = 'Admin' | 'Operador' | 'Cliente' | 'Auditor';
 
 /**
  * Devuelve los roles del usuario a partir del claim `roles` del access token de la API.

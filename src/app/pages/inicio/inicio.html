@@ -22,3 +22,8 @@
     </p>
   </div>
 </main>
+<!-- Cliente con sesión: sus últimos pedidos (PDF: "Customer: últimos pedidos y estado actual").
+     El componente y su llamada a /api/orders solo se cargan para un Cliente (import() dinámico en inicio.ts). -->
+@if (esCliente() && ultimosPedidos(); as componente) {
+  <ng-container *ngComponentOutlet="componente" />
+}

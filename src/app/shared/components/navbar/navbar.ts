@@ -4,6 +4,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthState } from '../../../core/services/auth-state';
 import { CarritoService } from '../../../core/services/carrito';
 import { puedeCrearPedidos } from '../../../core/utils/estados-pedido';
+import { ROLES_DASHBOARD } from '../../../admin/admin-menu';
 
 @Component({
   selector: 'navbar',
@@ -16,7 +17,8 @@ export class Navbar {
   // Signal-based: se actualiza solo si la sesión cambia en otra pestaña (ver AuthState),
   // sin depender de que el usuario navegue o interactúe en esta para refrescar.
   private readonly authState = inject(AuthState);
-  private readonly allowedDashboardRoles = ['Admin', 'Operador'];
+  // Admin, Operador y Auditor (los mismos que deja entrar el guard de /dashboard; ver admin-menu.ts).
+  private readonly allowedDashboardRoles: readonly string[] = ROLES_DASHBOARD;
   // El Operador ve los pedidos en /dashboard/pedidos (y el Admin, el catálogo); en la tienda, "Pedidos" es "mis pedidos" del Cliente.
   private readonly allowedPedidosRoles = ['Cliente'];
   private readonly carrito = inject(CarritoService);

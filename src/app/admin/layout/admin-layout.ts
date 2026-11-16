@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthState } from '../../core/services/auth-state';
+import { EntradaMenu, entradasVisibles, rutaDe } from '../admin-menu';
 
 @Component({
   selector: 'app-admin-layout',
@@ -14,35 +15,13 @@ import { AuthState } from '../../core/services/auth-state';
           <p class="px-3 pb-2 text-lg font-bold text-indigo-600 tracking-tight">Pedidos 360</p>
           <p class="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-gray-600">Administración</p>
           <ul class="flex flex-wrap md:flex-col gap-1">
-            <li>
-              <a routerLink="/dashboard" [routerLinkActiveOptions]="{ exact: true }"
-                routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold" ariaCurrentWhenActive="page"
-                class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
-                Inicio
-              </a>
-            </li>
-            @if (esAdmin()) {
+            <!-- Las entradas y sus roles vienen de admin-menu.ts (la misma fuente que los guards de admin.routes.ts). -->
+            @for (entrada of menu(); track entrada.segmento) {
               <li>
-                <a routerLink="/dashboard/catalogo" routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
-                  ariaCurrentWhenActive="page"
+                <a [routerLink]="ruta(entrada)" [routerLinkActiveOptions]="{ exact: entrada.segmento === '' }"
+                  routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold" ariaCurrentWhenActive="page"
                   class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
-                  Catálogo
-                </a>
-              </li>
-              <li>
-                <a routerLink="/dashboard/usuarios" routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
-                  ariaCurrentWhenActive="page"
-                  class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
-                  Usuarios
-                </a>
-              </li>
-            }
-            @if (esOperador()) {
-              <li>
-                <a routerLink="/dashboard/pedidos" routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
-                  ariaCurrentWhenActive="page"
-                  class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600">
-                  Pedidos
+                  {{ entrada.etiqueta }}
                 </a>
               </li>
             }
@@ -75,7 +54,7 @@ import { AuthState } from '../../core/services/auth-state';
 export class AdminLayout {
   private readonly authState = inject(AuthState);
   protected readonly nombre = this.authState.nombre;
-  // Catálogo y usuarios son solo de Admin; pedidos, solo de Operador (los guards de admin.routes.ts hacen cumplir lo mismo).
-  protected readonly esAdmin = computed(() => this.authState.roles().includes('Admin'));
-  protected readonly esOperador = computed(() => this.authState.roles().includes('Operador'));
+  /** Solo las secciones de los roles del usuario (los guards de admin.routes.ts hacen cumplir lo mismo). */
+  protected readonly menu = computed(() => entradasVisibles(this.authState.roles()));
+  protected readonly ruta = (entrada: EntradaMenu) => rutaDe(entrada);
 }
