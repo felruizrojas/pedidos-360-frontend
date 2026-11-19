@@ -25,7 +25,7 @@ interface Hito {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-5">
-      <form (ngSubmit)="buscar()" aria-label="Buscar timeline de un pedido"
+      <form (submit)="$event.preventDefault(); buscar()" aria-label="Buscar timeline de un pedido"
         class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-wrap items-end gap-3">
         <div>
           <label for="timeline-pedido" class="block text-sm font-medium text-gray-700">Nº de pedido</label>
